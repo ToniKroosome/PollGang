@@ -1,0 +1,45 @@
+{
+  "name": "film05-vote",
+  "version": "1.0.0",
+  "description": "Film 05 Group Availability Voting App - Thai/English bilingual scheduler",
+  "homepage": "https://localrycommu.work/Film05EatAug2025",
+  "main": "Film05Vote.jsx",
+  "scripts": {
+    "build": "webpack --mode production",
+    "dev": "webpack serve --mode development --open",
+    "start": "npm run dev"
+  },
+  "keywords": [
+    "react",
+    "scheduler",
+    "availability",
+    "group-planning",
+    "bilingual",
+    "thai",
+    "english"
+  ],
+  "author": "ToniKroosome",
+  "license": "MIT",
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.22.0",
+    "@babel/preset-react": "^7.22.0",
+    "babel-loader": "^9.1.0",
+    "css-loader": "^6.8.0",
+    "html-webpack-plugin": "^5.5.0",
+    "style-loader": "^3.3.0",
+    "webpack": "^5.88.0",
+    "webpack-cli": "^5.1.0",
+    "webpack-dev-server": "^4.15.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ToniKroosome/LocalReviewApp-Draft-3.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ToniKroosome/LocalReviewApp-Draft-3/issues"
+  }
+}
