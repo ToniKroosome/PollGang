@@ -1,4 +1,27 @@
 import React, { useState, useEffect } from 'react';
+import { film05Service } from './src/firebase.js';
+
+// Import admin system from main project (adjust path as needed)
+const getAdminStatus = async (userId) => {
+  // This would normally import from your main project's admin system
+  // For now, we'll create a simple check - replace with actual integration
+  try {
+    // Simulate checking against your main project's admin system
+    const adminEmails = [
+      'your-admin@email.com', // Replace with actual admin emails
+      'admin@localrycommu.work'
+    ];
+    
+    // In real implementation, this would check Firebase or your auth system
+    return {
+      isAdmin: adminEmails.includes(userId) || userId === 'admin',
+      isPrimaryAdmin: userId === 'admin@localrycommu.work'
+    };
+  } catch (error) {
+    console.error('Error checking admin status:', error);
+    return { isAdmin: false, isPrimaryAdmin: false };
+  }
+};
 
 const strings = {
   th: {
@@ -89,6 +112,16 @@ const THEAvailabilityVote = () => {
   const [paintValue, setPaintValue] = useState(null);
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [brush, setBrush] = useState(2); // 2=green, 1=yellow, 0=red
+  
+  // Admin system integration
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [adminPassword, setAdminPassword] = useState('');
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  
+  // Loading states
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (THEName && savedData[THEName]) {
@@ -108,6 +141,55 @@ const THEAvailabilityVote = () => {
     window.addEventListener('mouseup', handleGlobalMouseUp);
     return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
   }, []);
+
+  // Load submissions from Firebase on mount
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true);
+      const result = await film05Service.loadSubmissions();
+      if (result.success) {
+        setSavedData(result.data);
+      } else {
+        console.error('Failed to load submissions:', result.error);
+      }
+      setIsLoading(false);
+    };
+
+    loadData();
+
+    // Set up real-time listener for submissions
+    const unsubscribe = film05Service.subscribeToSubmissions((submissions) => {
+      setSavedData(submissions);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Admin login function
+  const handleAdminLogin = async () => {
+    // Simple password check - replace with your main project's auth integration
+    if (adminPassword === 'film05admin' || adminPassword === 'admin123') {
+      setIsAdmin(true);
+      setCurrentUser('admin');
+      setShowAdminLogin(false);
+      setAdminPassword('');
+    } else {
+      alert('Invalid admin password');
+    }
+  };
+
+  // Delete submission function
+  const deleteSubmission = async (submissionName) => {
+    if (isAdmin && confirm(`Delete submission from ${submissionName}?`)) {
+      const result = await film05Service.deleteSubmission(submissionName);
+      if (result.success) {
+        // Data will be updated via real-time listener
+        console.log('Submission deleted successfully');
+      } else {
+        alert('Failed to delete submission: ' + result.error);
+      }
+    }
+  };
 
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -158,7 +240,9 @@ const THEAvailabilityVote = () => {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    setIsSaving(true);
+    
     const THEData = {
       name: THEName,
       month: selectedMonth,
@@ -167,12 +251,16 @@ const THEAvailabilityVote = () => {
       restaurant: preferredRestaurant
     };
 
-    setSavedData(prev => ({
-      ...prev,
-      [THEName]: THEData
-    }));
-
-    setIsSubmitted(true);
+    const result = await film05Service.saveSubmission(THEData);
+    
+    if (result.success) {
+      // Data will be updated via real-time listener
+      setIsSubmitted(true);
+    } else {
+      alert('Failed to save submission: ' + result.error);
+    }
+    
+    setIsSaving(false);
   };
 
   const renderCalendar = () => {
@@ -281,6 +369,19 @@ const THEAvailabilityVote = () => {
                 {t('allTHEs')}
               </h1>
               <div className="flex gap-3 items-center">
+                {!isAdmin && (
+                  <button
+                    onClick={() => setShowAdminLogin(true)}
+                    className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors"
+                  >
+                    Admin
+                  </button>
+                )}
+                {isAdmin && (
+                  <span className="bg-green-600 text-white px-3 py-1 rounded text-sm">
+                    👨‍💼 Admin Mode
+                  </span>
+                )}
                 <button
                   onClick={() => setIsDarkMode(!isDarkMode)}
                   className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-yellow-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'}`}
@@ -322,8 +423,14 @@ const THEAvailabilityVote = () => {
               {t('monthYear', { month: getMonthName(viewMonth), year: viewYear })}
             </h2>
 
-            <div className="overflow-x-auto mb-6">
-              <table className="w-full border-collapse">
+            {isLoading ? (
+              <div className="text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <p className="mt-2">Loading submissions...</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto mb-6">
+                <table className="w-full border-collapse">
                 <thead>
                   <tr>
                     <th className={`border p-2 text-left font-semibold min-w-32 ${isDarkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-gray-50'}`}>
@@ -334,6 +441,11 @@ const THEAvailabilityVote = () => {
                         {i + 1}
                       </th>
                     ))}
+                    {isAdmin && (
+                      <th className={`border p-2 text-center font-semibold w-20 ${isDarkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-gray-50'}`}>
+                        Actions
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -368,13 +480,25 @@ const THEAvailabilityVote = () => {
                               </td>
                             );
                           })}
+                          {isAdmin && (
+                            <td className={`border p-2 text-center ${isDarkMode ? 'border-gray-600' : 'border-gray-300'}`}>
+                              <button
+                                onClick={() => deleteSubmission(THEName)}
+                                className="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600 transition-colors"
+                                title={`Delete ${THEName}'s submission`}
+                              >
+                                🗑️
+                              </button>
+                            </td>
+                          )}
                         </tr>
                       );
                     })
                   )}
                 </tbody>
-              </table>
-            </div>
+                </table>
+              </div>
+            )}
 
             <div className="flex justify-center gap-6 text-sm">
               <div className="flex items-center gap-2">
@@ -412,6 +536,44 @@ const THEAvailabilityVote = () => {
             )}
           </div>
         </div>
+
+        {/* Admin Login Modal */}
+        {showAdminLogin && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className={`rounded-lg p-6 max-w-sm w-full mx-4 ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white'}`}>
+              <h3 className="text-lg font-bold mb-4">Admin Login</h3>
+              <input
+                type="password"
+                placeholder="Admin password"
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                className={`w-full px-3 py-2 border rounded mb-4 ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'}`}
+                onKeyPress={(e) => e.key === 'Enter' && handleAdminLogin()}
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={handleAdminLogin}
+                  className="flex-1 bg-red-600 text-white py-2 rounded hover:bg-red-700 transition-colors"
+                >
+                  Login
+                </button>
+                <button
+                  onClick={() => {
+                    setShowAdminLogin(false);
+                    setAdminPassword('');
+                  }}
+                  className={`flex-1 py-2 rounded transition-colors ${isDarkMode ? 'bg-gray-600 hover:bg-gray-700' : 'bg-gray-200 hover:bg-gray-300'}`}
+                >
+                  Cancel
+                </button>
+              </div>
+              <p className="text-xs mt-2 opacity-60">
+                Password: film05admin or admin123
+              </p>
+            </div>
+          </div>
+        )}
+
       </div>
     );
   }
@@ -627,9 +789,14 @@ const THEAvailabilityVote = () => {
               </button>
               <button
                 onClick={handleSubmit}
-                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                disabled={isSaving}
+                className={`px-6 py-2 rounded-lg transition-colors ${
+                  isSaving 
+                    ? 'bg-gray-400 cursor-not-allowed' 
+                    : 'bg-green-600 hover:bg-green-700'
+                } text-white`}
               >
-                {t('submitBtn')}
+                {isSaving ? 'Saving...' : t('submitBtn')}
               </button>
             </div>
           </div>
