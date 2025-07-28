@@ -246,14 +246,20 @@ const THEAvailabilityVote = () => {
     const pollParam = urlParams.get('poll');
     const viewMode = urlParams.get('view');
     
+    console.log('🔍 URL check - pollParam:', pollParam, 'viewMode:', viewMode);
+    
     if (pollParam) {
       // Extract actual poll ID from descriptive URL
       // Format: "title-slug-poll_timestamp" -> extract "poll_timestamp"
       const pollIdMatch = pollParam.match(/(poll_\d+)$/);
       const pollId = pollIdMatch ? pollIdMatch[1] : pollParam;
       
+      console.log('🎯 Extracted pollId:', pollId);
+      
       // Load the specific poll from URL
       const pollData = localStorage.getItem(pollId);
+      console.log('💾 LocalStorage data for', pollId, ':', pollData ? 'found' : 'not found');
+      
       if (pollData) {
         try {
           const poll = JSON.parse(pollData);
@@ -714,12 +720,14 @@ const THEAvailabilityVote = () => {
         
         // Also save to localStorage for immediate access
         localStorage.setItem(pollKey, JSON.stringify(pollData));
+        console.log('💾 Poll saved to localStorage:', pollKey);
         
         // Update polls data in state
         setPollsData(prev => ({
           ...prev,
           [pollKey]: pollData
         }));
+        console.log('🔄 Poll added to state:', pollKey);
         
         // Set the current poll ID and poll data, then navigate to voting interface
         setCurrentPollId(pollKey);
@@ -729,9 +737,12 @@ const THEAvailabilityVote = () => {
         setCurrentPage('main');
         setCurrentStep(1);
         
+        console.log('🎯 Navigation set to poll:', pollKey);
+        
         // Update URL to include poll ID
         const newUrl = `${window.location.origin}${window.location.pathname}?poll=${pollKey}`;
         window.history.pushState({ pollId: pollKey }, '', newUrl);
+        console.log('🔗 URL updated to:', newUrl);
         
         // Reset form
         setNewPollTitle('');
