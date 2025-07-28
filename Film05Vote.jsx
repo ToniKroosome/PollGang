@@ -1625,7 +1625,10 @@ const THEAvailabilityVote = () => {
             </div>
 
             <h2 className={`text-xl font-semibold text-center mb-6 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
-              {t('monthYear', { month: getMonthName(viewMonth), year: viewYear })}
+              {currentPollId && pollsData[currentPollId] ? 
+                formatDateRange(pollsData[currentPollId]) : 
+                t('monthYear', { month: getMonthName(viewMonth), year: viewYear })
+              }
             </h2>
 
             {isLoading ? (
@@ -1858,10 +1861,13 @@ const THEAvailabilityVote = () => {
                     📅 {lang === 'th' ? 'ช่วงเวลาที่ต้องการสำรวจ' : 'Date Range for Voting'}
                   </div>
                   <div className={`text-lg font-semibold ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
-                    {t('monthYear', { month: getMonthName(selectedMonth), year: selectedYear })}
+                    {currentPollId && pollsData[currentPollId] ? 
+                      formatDateRange(pollsData[currentPollId]) : 
+                      t('monthYear', { month: getMonthName(selectedMonth), year: selectedYear })
+                    }
                   </div>
                   <div className="text-xs mt-1 opacity-75">
-                    {lang === 'th' ? 'เลือกวันที่ว่างในเดือนนี้' : 'Select your available dates this month'}
+                    {lang === 'th' ? 'เลือกวันที่ว่างในช่วงนี้' : 'Select your available dates in this range'}
                   </div>
                 </div>
               </div>
@@ -1946,7 +1952,10 @@ const THEAvailabilityVote = () => {
             </div>
 
             <h2 className={`text-xl font-semibold text-center mb-6 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
-              {t('monthYear', { month: getMonthName(selectedMonth), year: selectedYear })}
+              {currentPollId && pollsData[currentPollId] ? 
+                formatDateRange(pollsData[currentPollId]) : 
+                t('monthYear', { month: getMonthName(selectedMonth), year: selectedYear })
+              }
             </h2>
 
             <div className={`mb-6 p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
