@@ -93,7 +93,8 @@ export const film05Service = {
   // Poll management functions
   async createPoll(pollData) {
     try {
-      const pollId = `poll_${pollData.month}_${pollData.year}`;
+      // Use the provided ID or generate a timestamp-based one
+      const pollId = pollData.id || `poll_${Date.now()}`;
       const docRef = doc(db, 'film05_polls', pollId);
       await setDoc(docRef, {
         ...pollData,

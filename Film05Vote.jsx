@@ -701,10 +701,16 @@ const THEAvailabilityVote = () => {
         };
         
         // Save to Firebase for cross-device access
+        console.log('🚀 Creating poll with data:', pollData);
         const firebaseResult = await film05Service.createPoll(pollData);
+        console.log('📥 Firebase result:', firebaseResult);
+        
         if (!firebaseResult.success) {
+          console.error('❌ Poll creation failed:', firebaseResult.error);
           throw new Error(firebaseResult.error || 'Failed to save poll to Firebase');
         }
+        
+        console.log('✅ Poll created successfully in Firebase');
         
         // Also save to localStorage for immediate access
         localStorage.setItem(pollKey, JSON.stringify(pollData));
