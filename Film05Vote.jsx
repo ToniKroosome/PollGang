@@ -822,34 +822,37 @@ const THEAvailabilityVote = () => {
     );
   }
 
+  // Migration: Fix any polls with 1-based month indexing (run once when data loads)
+  React.useEffect(() => {
+    if (currentRoute !== 'poll-list') return; // Only run on poll list page
+    
+    let needsUpdate = false;
+    const updatedPolls = {};
+    
+    Object.entries(pollsData).forEach(([pollId, poll]) => {
+      if (poll.month > 11) {
+        updatedPolls[pollId] = {
+          ...poll,
+          month: poll.month - 1  // Convert from 1-based to 0-based
+        };
+        
+        // Update localStorage
+        try {
+          localStorage.setItem(pollId, JSON.stringify(updatedPolls[pollId]));
+          needsUpdate = true;
+        } catch (error) {
+          console.error('Error updating poll in localStorage:', error);
+        }
+      }
+    });
+    
+    if (needsUpdate) {
+      setPollsData(prev => ({ ...prev, ...updatedPolls }));
+    }
+  }, [currentRoute, pollsData]);
+
   // Poll List Page
   if (currentRoute === 'poll-list') {
-    // Migration: Fix any polls with 1-based month indexing (run once per session)
-    React.useEffect(() => {
-      let needsUpdate = false;
-      const updatedPolls = {};
-      
-      Object.entries(pollsData).forEach(([pollId, poll]) => {
-        if (poll.month > 11) {
-          updatedPolls[pollId] = {
-            ...poll,
-            month: poll.month - 1  // Convert from 1-based to 0-based
-          };
-          
-          // Update localStorage
-          try {
-            localStorage.setItem(pollId, JSON.stringify(updatedPolls[pollId]));
-            needsUpdate = true;
-          } catch (error) {
-            console.error('Error updating poll in localStorage:', error);
-          }
-        }
-      });
-      
-      if (needsUpdate) {
-        setPollsData(prev => ({ ...prev, ...updatedPolls }));
-      }
-    }, [pollsData]);
     
     // Combine actual polls with submission data
     const pollsList = [];
