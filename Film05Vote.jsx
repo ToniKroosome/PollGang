@@ -903,6 +903,35 @@ const THEAvailabilityVote = () => {
                           >
                             🔗 Open
                           </button>
+                          <button
+                            onClick={() => {
+                              if (window.confirm(`Are you sure you want to delete "${poll.title || getMonthName(poll.month) + ' ' + poll.year}"?\n\nThis will permanently remove the poll and cannot be undone.`)) {
+                                // Remove from localStorage
+                                localStorage.removeItem(poll.id);
+                                
+                                // Remove from state
+                                setPollsData(prev => {
+                                  const updated = { ...prev };
+                                  delete updated[poll.id];
+                                  return updated;
+                                });
+                                
+                                // Show temporary feedback
+                                const button = event.target;
+                                const originalText = button.textContent;
+                                button.textContent = 'Deleted!';
+                                button.className = button.className.replace('bg-red-600 hover:bg-red-700', 'bg-green-600');
+                                setTimeout(() => {
+                                  button.textContent = originalText;
+                                  button.className = button.className.replace('bg-green-600', 'bg-red-600 hover:bg-red-700');
+                                }, 1500);
+                              }
+                            }}
+                            className="bg-red-600 text-white py-1 px-2 rounded text-xs hover:bg-red-700 transition-colors"
+                            title="Delete this poll permanently"
+                          >
+                            🗑️
+                          </button>
                         </div>
                       )}
                     </div>
