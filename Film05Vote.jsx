@@ -515,24 +515,11 @@ const THEAvailabilityVote = () => {
         // Save to localStorage
         localStorage.setItem(pollKey, JSON.stringify(pollData));
         
-        // Debug logging
-        console.log('🚀 Poll created:', {
-          pollKey,
-          pollData,
-          timestamp,
-          allPollKeys: Object.keys(localStorage).filter(k => k.startsWith('poll_')),
-          pollsDataKeys: Object.keys(pollsData)
-        });
-        
         // Update polls data in state
-        setPollsData(prev => {
-          const updated = {
-            ...prev,
-            [pollKey]: pollData
-          };
-          console.log('📊 Updated pollsData:', Object.keys(updated));
-          return updated;
-        });
+        setPollsData(prev => ({
+          ...prev,
+          [pollKey]: pollData
+        }));
         
         // Set the current poll ID and poll data, then navigate to voting interface
         setCurrentPollId(pollKey);
@@ -769,18 +756,6 @@ const THEAvailabilityVote = () => {
         </div>
 
         <div className="max-w-6xl mx-auto pt-16">
-          {/* Debug Panel */}
-          <div className={`mb-4 p-4 rounded-lg border ${isDarkMode ? 'bg-red-900 border-red-600' : 'bg-yellow-50 border-yellow-200'}`}>
-            <h3 className={`font-bold mb-2 ${isDarkMode ? 'text-red-400' : 'text-yellow-800'}`}>🐛 Poll Debug Info</h3>
-            <div className="text-sm space-y-1">
-              <div>localStorage polls: {Object.keys(localStorage).filter(k => k.startsWith('poll_')).length}</div>
-              <div>pollsData state: {Object.keys(pollsData).length}</div>
-              <div>pollsList count: {polls.length}</div>
-              <div>localStorage keys: [{Object.keys(localStorage).filter(k => k.startsWith('poll_')).join(', ')}]</div>
-              <div>pollsData keys: [{Object.keys(pollsData).join(', ')}]</div>
-            </div>
-          </div>
-          
           <div className={`rounded-xl shadow-lg p-8 ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white'}`}>
             <div className="flex items-center justify-between mb-8">
               <div>
