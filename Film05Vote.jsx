@@ -116,6 +116,37 @@ const THEAvailabilityVote = () => {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [brush, setBrush] = useState(2); // 2=green, 1=yellow, 0=red, -1=clear/untoggle
   
+  // Poll editing state
+  const [editingPollId, setEditingPollId] = useState(null);
+  const [editingTitle, setEditingTitle] = useState('');
+  
+  // Function to save edited poll title
+  const saveEditedTitle = (pollId, newTitle) => {
+    if (!newTitle.trim()) return;
+    
+    try {
+      // Update localStorage
+      const pollData = localStorage.getItem(pollId);
+      if (pollData) {
+        const poll = JSON.parse(pollData);
+        poll.title = newTitle.trim();
+        localStorage.setItem(pollId, JSON.stringify(poll));
+        
+        // Update state
+        setPollsData(prev => ({
+          ...prev,
+          [pollId]: { ...prev[pollId], title: newTitle.trim() }
+        }));
+      }
+      
+      // Reset editing state
+      setEditingPollId(null);
+      setEditingTitle('');
+    } catch (error) {
+      console.error('Error saving edited title:', error);
+    }
+  };
+  
   // Mobile touch support
   const [touchStarted, setTouchStarted] = useState(false);
   const [lastTouchedDay, setLastTouchedDay] = useState(null);
@@ -812,14 +843,68 @@ const THEAvailabilityVote = () => {
                 {polls.map(poll => (
                   <div key={poll.id || `${poll.month}-${poll.year}`} className={`p-6 rounded-lg border ${isDarkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-200 bg-gray-50'}`}>
                     <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                          {poll.title || `${getMonthName(poll.month)} ${poll.year}`}
-                        </h3>
-                        {poll.title && (
-                          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                            {getMonthName(poll.month)} {poll.year}
-                          </p>
+                      <div className="flex-1">
+                        {editingPollId === poll.id ? (
+                          <div className="flex gap-2 items-center">
+                            <input
+                              type="text"
+                              value={editingTitle}
+                              onChange={(e) => setEditingTitle(e.target.value)}
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                  saveEditedTitle(poll.id, editingTitle);
+                                } else if (e.key === 'Escape') {
+                                  setEditingPollId(null);
+                                  setEditingTitle('');
+                                }
+                              }}
+                              className={`flex-1 px-2 py-1 text-sm border rounded ${isDarkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300'}`}
+                              placeholder="Enter poll title"
+                              autoFocus
+                            />
+                            <button
+                              onClick={() => saveEditedTitle(poll.id, editingTitle)}
+                              className="bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700"
+                              title="Save"
+                            >
+                              ✓
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingPollId(null);
+                                setEditingTitle('');
+                              }}
+                              className="bg-gray-600 text-white px-2 py-1 rounded text-xs hover:bg-gray-700"
+                              title="Cancel"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <div>
+                              <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                                {poll.title || `${getMonthName(poll.month)} ${poll.year}`}
+                              </h3>
+                              {poll.title && (
+                                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                  {getMonthName(poll.month)} {poll.year}
+                                </p>
+                              )}
+                            </div>
+                            {poll.id && isAdmin && (
+                              <button
+                                onClick={() => {
+                                  setEditingPollId(poll.id);
+                                  setEditingTitle(poll.title || `${getMonthName(poll.month)} ${poll.year}`);
+                                }}
+                                className="bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700 transition-colors ml-2"
+                                title="Edit poll title"
+                              >
+                                ✏️
+                              </button>
+                            )}
+                          </div>
                         )}
                         {poll.createdAt && (
                           <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
