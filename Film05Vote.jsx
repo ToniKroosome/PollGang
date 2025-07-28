@@ -293,25 +293,33 @@ const THEAvailabilityVote = () => {
         console.error('Failed to load submissions:', submissionsResult.error);
       }
       
-      // Load polls from localStorage (since Firebase permissions don't allow new collections)
-      const loadLocalPolls = () => {
-        const polls = {};
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && key.startsWith('poll_')) {
-            try {
-              const pollData = JSON.parse(localStorage.getItem(key));
-              polls[key] = { ...pollData, id: key };
-            } catch (error) {
-              console.error('Error loading poll from localStorage:', key, error);
+      // Load polls from Firebase for cross-device access
+      const pollsResult = await film05Service.loadPolls();
+      if (pollsResult.success) {
+        setPollsData(pollsResult.data);
+      } else {
+        console.error('Failed to load polls from Firebase:', pollsResult.error);
+        
+        // Fallback to localStorage
+        const loadLocalPolls = () => {
+          const polls = {};
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('poll_')) {
+              try {
+                const pollData = JSON.parse(localStorage.getItem(key));
+                polls[key] = { ...pollData, id: key };
+              } catch (error) {
+                console.error('Error loading poll from localStorage:', key, error);
+              }
             }
           }
-        }
-        return polls;
-      };
-      
-      const localPolls = loadLocalPolls();
-      setPollsData(localPolls);
+          return polls;
+        };
+        
+        const localPolls = loadLocalPolls();
+        setPollsData(localPolls);
+      }
       
       setIsLoading(false);
     };
@@ -323,8 +331,14 @@ const THEAvailabilityVote = () => {
       setSavedData(submissions);
     });
 
+    // Set up real-time listener for polls
+    const unsubscribePolls = film05Service.subscribeToPolls((polls) => {
+      setPollsData(polls);
+    });
+
     return () => {
       unsubscribeSubmissions();
+      unsubscribePolls();
     };
   }, []);
 
@@ -686,7 +700,13 @@ const THEAvailabilityVote = () => {
           id: pollKey
         };
         
-        // Save to localStorage
+        // Save to Firebase for cross-device access
+        const firebaseResult = await film05Service.createPoll(pollData);
+        if (!firebaseResult.success) {
+          throw new Error(firebaseResult.error || 'Failed to save poll to Firebase');
+        }
+        
+        // Also save to localStorage for immediate access
         localStorage.setItem(pollKey, JSON.stringify(pollData));
         
         // Update polls data in state
