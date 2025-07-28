@@ -192,6 +192,39 @@ const THEAvailabilityVote = () => {
   const [newPollEndDate, setNewPollEndDate] = useState('');
   const [currentPollId, setCurrentPollId] = useState(null);
 
+  // Helper function to update both route and URL
+  const updateRouteAndURL = (route, page = 'main', view = null) => {
+    setCurrentRoute(route);
+    setCurrentPage(page);
+    
+    // Update URL with appropriate view parameter
+    if (currentPollId && route === 'availability') {
+      const currentUrl = new URL(window.location);
+      const pollData = pollsData[currentPollId];
+      
+      if (pollData) {
+        // Create descriptive URL slug
+        const titleSlug = (pollData.title || `${getMonthName(pollData.month)}-${pollData.year}`)
+          .toLowerCase()
+          .replace(/[^a-z0-9\s]/g, '')
+          .replace(/\s+/g, '-')
+          .substring(0, 30);
+        
+        currentUrl.searchParams.set('poll', `${titleSlug}-${currentPollId}`);
+        
+        // Set view parameter based on page
+        if (page === 'view') {
+          currentUrl.searchParams.set('view', 'results');
+        } else {
+          currentUrl.searchParams.set('view', 'vote');
+        }
+        
+        window.history.replaceState({}, '', currentUrl.toString());
+        console.log('🔗 Updated URL:', currentUrl.toString());
+      }
+    }
+  };
+
   useEffect(() => {
     if (THEName && savedData[THEName]) {
       const data = savedData[THEName];
@@ -254,15 +287,18 @@ const THEAvailabilityVote = () => {
       const pollIdMatch = pollParam.match(/(poll_\d+)$/);
       const pollId = pollIdMatch ? pollIdMatch[1] : pollParam;
       
+      console.log('🎯 Regex match result:', pollIdMatch);
       console.log('🎯 Extracted pollId:', pollId);
+      console.log('🎯 Original pollParam:', pollParam);
       
-      // Load the specific poll from URL
+      // Load the specific poll from URL (try localStorage first, then Firebase)
       const pollData = localStorage.getItem(pollId);
       console.log('💾 LocalStorage data for', pollId, ':', pollData ? 'found' : 'not found');
       
       if (pollData) {
         try {
           const poll = JSON.parse(pollData);
+          console.log('✅ Poll loaded from localStorage:', poll);
           setCurrentPollId(pollId);
           setSelectedMonth(poll.month);
           setSelectedYear(poll.year);
@@ -280,11 +316,36 @@ const THEAvailabilityVote = () => {
           console.error('Error loading poll from URL:', error);
         }
       }
+      
+      // Always set the current poll ID from URL, even if data isn't loaded yet
+      console.log('🎯 Setting currentPollId from URL:', pollId);
+      setCurrentPollId(pollId);
     } else if (viewMode === 'polls') {
       // Show All Polls page
       setCurrentRoute('poll-list');
     }
   }, []);
+
+  // Watch for pollsData changes and load current poll if needed
+  useEffect(() => {
+    if (currentPollId && pollsData[currentPollId] && !localStorage.getItem(currentPollId)) {
+      console.log('🔄 Poll data loaded from Firebase, setting up poll:', currentPollId);
+      const poll = pollsData[currentPollId];
+      setSelectedMonth(poll.month);
+      setSelectedYear(poll.year);
+      setViewMonth(poll.month);
+      setViewYear(poll.year);
+      setCurrentRoute('availability');
+      
+      // Update URL to include view=vote for voting page
+      const currentUrl = new URL(window.location);
+      if (!currentUrl.searchParams.get('view')) {
+        currentUrl.searchParams.set('view', 'vote');
+        window.history.replaceState({}, '', currentUrl.toString());
+        console.log('🔗 Updated URL to include view=vote:', currentUrl.toString());
+      }
+    }
+  }, [pollsData, currentPollId]);
 
   // Load submissions and polls from Firebase on mount
   useEffect(() => {
@@ -733,8 +794,7 @@ const THEAvailabilityVote = () => {
         setCurrentPollId(pollKey);
         setSelectedMonth(startDateObj.getMonth());
         setSelectedYear(startDateObj.getFullYear());
-        setCurrentRoute('availability');
-        setCurrentPage('main');
+        updateRouteAndURL('availability', 'main');
         setCurrentStep(1);
         
         console.log('🎯 Navigation set to poll:', pollKey);
@@ -1485,8 +1545,7 @@ const THEAvailabilityVote = () => {
                   </p>
                   <button
                     onClick={() => {
-                      setCurrentRoute('availability');
-                      setCurrentPage('view');
+                      updateRouteAndURL('availability', 'view');
                     }}
                     className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold w-full"
                   >
