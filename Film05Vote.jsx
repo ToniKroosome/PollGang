@@ -94,7 +94,7 @@ const useT = (lang) => (key, params = {}) => {
 
 const THEAvailabilityVote = () => {
   // Route management
-  const [currentRoute, setCurrentRoute] = useState('admin-main'); // 'admin-main', 'poll-list', 'create-poll', or 'availability'
+  const [currentRoute, setCurrentRoute] = useState('poll-list'); // 'admin-main', 'poll-list', 'create-poll', or 'availability'
   const [currentPage, setCurrentPage] = useState('main');
   const [currentStep, setCurrentStep] = useState(1);
   const [lang, setLang] = useState('th');
@@ -941,12 +941,21 @@ const THEAvailabilityVote = () => {
                   Manage all Film 05 voting sessions
                 </p>
               </div>
-              <button
-                onClick={() => setCurrentRoute('admin-main')}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                ← Dashboard
-              </button>
+              {isAdmin ? (
+                <button
+                  onClick={() => setCurrentRoute('admin-main')}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  ← Dashboard
+                </button>
+              ) : (
+                <button
+                  onClick={() => setCurrentRoute('admin-main')}
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  👨‍💼 Admin Login
+                </button>
+              )}
             </div>
 
             {isLoading ? (
