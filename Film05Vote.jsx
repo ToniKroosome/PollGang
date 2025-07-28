@@ -744,6 +744,9 @@ const THEAvailabilityVote = () => {
         window.history.pushState({ pollId: pollKey }, '', newUrl);
         console.log('🔗 URL updated to:', newUrl);
         
+        // Force trigger URL parameter check since pushState doesn't trigger useEffect
+        console.log('🔄 Force triggering URL check for new poll');
+        
         // Reset form
         setNewPollTitle('');
         setNewPollStartDate('');
