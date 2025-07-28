@@ -212,6 +212,20 @@ const THEAvailabilityVote = () => {
     };
   }, []);
 
+  // Load admin state from localStorage on mount
+  useEffect(() => {
+    try {
+      const savedAdminState = localStorage.getItem('pollgang_admin_state');
+      if (savedAdminState) {
+        const adminData = JSON.parse(savedAdminState);
+        setIsAdmin(adminData.isAdmin);
+        setCurrentUser(adminData.currentUser);
+      }
+    } catch (error) {
+      console.error('Error loading admin state:', error);
+    }
+  }, []);
+
   // Check URL for poll ID and view mode on mount
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -246,6 +260,9 @@ const THEAvailabilityVote = () => {
           console.error('Error loading poll from URL:', error);
         }
       }
+    } else if (viewMode === 'polls') {
+      // Show All Polls page
+      setCurrentRoute('poll-list');
     }
   }, []);
 
@@ -305,6 +322,17 @@ const THEAvailabilityVote = () => {
       setCurrentUser('admin');
       setShowAdminLogin(false);
       setAdminPassword('');
+      
+      // Save admin state to localStorage for persistence
+      try {
+        const adminData = {
+          isAdmin: true,
+          currentUser: 'admin'
+        };
+        localStorage.setItem('pollgang_admin_state', JSON.stringify(adminData));
+      } catch (error) {
+        console.error('Error saving admin state:', error);
+      }
     } else {
       alert('Invalid admin password');
     }
@@ -1234,6 +1262,13 @@ const THEAvailabilityVote = () => {
                     onClick={() => {
                       setIsAdmin(false);
                       setCurrentUser(null);
+                      
+                      // Clear admin state from localStorage
+                      try {
+                        localStorage.removeItem('pollgang_admin_state');
+                      } catch (error) {
+                        console.error('Error clearing admin state:', error);
+                      }
                     }}
                     className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors"
                   >
@@ -1275,7 +1310,12 @@ const THEAvailabilityVote = () => {
                     View and manage all created polls and voting sessions
                   </p>
                   <button
-                    onClick={() => setCurrentRoute('poll-list')}
+                    onClick={() => {
+                      setCurrentRoute('poll-list');
+                      // Update URL for All Polls page
+                      const newUrl = `${window.location.pathname}?view=polls`;
+                      window.history.pushState({}, '', newUrl);
+                    }}
                     className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors font-semibold w-full"
                   >
                     View All Polls
