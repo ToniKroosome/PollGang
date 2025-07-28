@@ -119,9 +119,11 @@ const THEAvailabilityVote = () => {
   // Poll editing state
   const [editingPollId, setEditingPollId] = useState(null);
   const [editingTitle, setEditingTitle] = useState('');
+  const [editingMonth, setEditingMonth] = useState(7);
+  const [editingYear, setEditingYear] = useState(2025);
   
-  // Function to save edited poll title
-  const saveEditedTitle = (pollId, newTitle) => {
+  // Function to save edited poll data
+  const saveEditedPoll = (pollId, newTitle, newMonth, newYear) => {
     if (!newTitle.trim()) return;
     
     try {
@@ -130,20 +132,29 @@ const THEAvailabilityVote = () => {
       if (pollData) {
         const poll = JSON.parse(pollData);
         poll.title = newTitle.trim();
+        poll.month = newMonth;
+        poll.year = newYear;
         localStorage.setItem(pollId, JSON.stringify(poll));
         
         // Update state
         setPollsData(prev => ({
           ...prev,
-          [pollId]: { ...prev[pollId], title: newTitle.trim() }
+          [pollId]: { 
+            ...prev[pollId], 
+            title: newTitle.trim(),
+            month: newMonth,
+            year: newYear
+          }
         }));
       }
       
       // Reset editing state
       setEditingPollId(null);
       setEditingTitle('');
+      setEditingMonth(7);
+      setEditingYear(2025);
     } catch (error) {
-      console.error('Error saving edited title:', error);
+      console.error('Error saving edited poll:', error);
     }
   };
   
@@ -850,40 +861,70 @@ const THEAvailabilityVote = () => {
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex-1">
                         {editingPollId === poll.id ? (
-                          <div className="flex gap-2 items-center">
+                          <div className="space-y-2">
                             <input
                               type="text"
                               value={editingTitle}
                               onChange={(e) => setEditingTitle(e.target.value)}
                               onKeyPress={(e) => {
                                 if (e.key === 'Enter') {
-                                  saveEditedTitle(poll.id, editingTitle);
+                                  saveEditedPoll(poll.id, editingTitle, editingMonth, editingYear);
                                 } else if (e.key === 'Escape') {
                                   setEditingPollId(null);
                                   setEditingTitle('');
                                 }
                               }}
-                              className={`flex-1 px-2 py-1 text-sm border rounded ${isDarkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300'}`}
+                              className={`w-full px-2 py-1 text-sm border rounded ${isDarkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300'}`}
                               placeholder="Enter poll title"
                               autoFocus
                             />
-                            <button
-                              onClick={() => saveEditedTitle(poll.id, editingTitle)}
-                              className="bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700"
-                              title="Save"
-                            >
-                              ✓
-                            </button>
-                            <button
-                              onClick={() => {
-                                setEditingPollId(null);
-                                setEditingTitle('');
-                              }}
-                              className="bg-gray-600 text-white px-2 py-1 rounded text-xs hover:bg-gray-700"
-                              title="Cancel"
-                            >
-                              ✕
-                            </button>
+                            <div className="flex gap-2">
+                              <select
+                                value={editingMonth}
+                                onChange={(e) => setEditingMonth(parseInt(e.target.value))}
+                                className={`flex-1 px-2 py-1 text-sm border rounded ${isDarkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300'}`}
+                              >
+                                <option value={1}>January</option>
+                                <option value={2}>February</option>
+                                <option value={3}>March</option>
+                                <option value={4}>April</option>
+                                <option value={5}>May</option>
+                                <option value={6}>June</option>
+                                <option value={7}>July</option>
+                                <option value={8}>August</option>
+                                <option value={9}>September</option>
+                                <option value={10}>October</option>
+                                <option value={11}>November</option>
+                                <option value={12}>December</option>
+                              </select>
+                              <input
+                                type="number"
+                                value={editingYear}
+                                onChange={(e) => setEditingYear(parseInt(e.target.value))}
+                                min="2024"
+                                max="2030"
+                                className={`w-20 px-2 py-1 text-sm border rounded ${isDarkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300'}`}
+                              />
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => saveEditedPoll(poll.id, editingTitle, editingMonth, editingYear)}
+                                className="bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700"
+                                title="Save changes"
+                              >
+                                ✓ Save
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditingPollId(null);
+                                  setEditingTitle('');
+                                }}
+                                className="bg-gray-600 text-white px-3 py-1 rounded text-xs hover:bg-gray-700"
+                                title="Cancel editing"
+                              >
+                                ✕ Cancel
+                              </button>
+                            </div>
                           </div>
                         ) : (
                           <div className="flex items-center gap-2">
@@ -902,9 +943,11 @@ const THEAvailabilityVote = () => {
                                 onClick={() => {
                                   setEditingPollId(poll.id);
                                   setEditingTitle(poll.title || `${getMonthName(poll.month)} ${poll.year}`);
+                                  setEditingMonth(poll.month);
+                                  setEditingYear(poll.year);
                                 }}
                                 className="bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700 transition-colors ml-2"
-                                title="Edit poll title"
+                                title="Edit poll title and date range"
                               >
                                 ✏️
                               </button>
