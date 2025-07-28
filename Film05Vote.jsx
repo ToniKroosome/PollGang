@@ -379,6 +379,12 @@ const THEAvailabilityVote = () => {
     return lang === 'th' ? monthsTH[index] : months[index];
   };
 
+  const getDayName = (dayIndex) => {
+    const daysEN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const daysTH = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
+    return lang === 'th' ? daysTH[dayIndex] : daysEN[dayIndex];
+  };
+
   const formatDateRange = (poll) => {
     if (poll.startDate && poll.endDate) {
       const start = new Date(poll.startDate);
@@ -1644,11 +1650,27 @@ const THEAvailabilityVote = () => {
                     <th className={`border p-2 text-left font-semibold min-w-32 ${isDarkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-gray-50'}`}>
                       {t('THEName')}
                     </th>
-                    {Array.from({ length: daysInMonth }, (_, i) => (
-                      <th key={i + 1} className={`border p-1 text-center text-sm w-6 ${isDarkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-gray-50'}`}>
-                        {i + 1}
-                      </th>
-                    ))}
+                    {Array.from({ length: daysInMonth }, (_, i) => {
+                      const dayNum = i + 1;
+                      const dayOfWeek = new Date(viewYear, viewMonth, dayNum).getDay();
+                      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // Sunday or Saturday
+                      return (
+                        <th key={dayNum} className={`border p-1 text-center text-xs w-8 ${
+                          isDarkMode 
+                            ? `border-gray-600 ${isWeekend ? 'bg-red-900/30' : 'bg-gray-700'}` 
+                            : `border-gray-300 ${isWeekend ? 'bg-red-50' : 'bg-gray-50'}`
+                        }`}>
+                          <div className="flex flex-col">
+                            <span className={`font-semibold ${isWeekend ? (isDarkMode ? 'text-red-400' : 'text-red-600') : ''}`}>
+                              {dayNum}
+                            </span>
+                            <span className={`text-xs opacity-75 ${isWeekend ? (isDarkMode ? 'text-red-300' : 'text-red-500') : ''}`}>
+                              {getDayName(dayOfWeek)}
+                            </span>
+                          </div>
+                        </th>
+                      );
+                    })}
                     {isAdmin && (
                       <th className={`border p-2 text-center font-semibold w-20 ${isDarkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-gray-50'}`}>
                         Actions
@@ -1724,6 +1746,10 @@ const THEAvailabilityVote = () => {
               <div className="flex items-center gap-2">
                 <div className={`w-4 h-4 border rounded ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-100 border-gray-300'}`}></div>
                 <span>{t('legendNone')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className={`w-4 h-4 rounded ${isDarkMode ? 'bg-red-900/30 border border-red-600' : 'bg-red-50 border border-red-300'}`}></div>
+                <span>{lang === 'th' ? 'วันหยุด' : 'Weekend'}</span>
               </div>
             </div>
 
