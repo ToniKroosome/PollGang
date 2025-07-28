@@ -119,12 +119,20 @@ const THEAvailabilityVote = () => {
   // Poll editing state
   const [editingPollId, setEditingPollId] = useState(null);
   const [editingTitle, setEditingTitle] = useState('');
-  const [editingMonth, setEditingMonth] = useState(7);
-  const [editingYear, setEditingYear] = useState(2025);
+  const [editingStartDate, setEditingStartDate] = useState('');
+  const [editingEndDate, setEditingEndDate] = useState('');
   
   // Function to save edited poll data
-  const saveEditedPoll = (pollId, newTitle, newMonth, newYear) => {
-    if (!newTitle.trim()) return;
+  const saveEditedPoll = (pollId, newTitle, newStartDate, newEndDate) => {
+    if (!newTitle.trim() || !newStartDate || !newEndDate) {
+      alert('Please fill in all fields');
+      return;
+    }
+    
+    if (new Date(newStartDate) > new Date(newEndDate)) {
+      alert('Start date must be before end date');
+      return;
+    }
     
     try {
       // Update localStorage
@@ -132,8 +140,12 @@ const THEAvailabilityVote = () => {
       if (pollData) {
         const poll = JSON.parse(pollData);
         poll.title = newTitle.trim();
-        poll.month = newMonth;
-        poll.year = newYear;
+        poll.startDate = newStartDate;
+        poll.endDate = newEndDate;
+        // Keep legacy month/year for compatibility
+        const startDateObj = new Date(newStartDate);
+        poll.month = startDateObj.getMonth();
+        poll.year = startDateObj.getFullYear();
         localStorage.setItem(pollId, JSON.stringify(poll));
         
         // Update state
@@ -142,8 +154,10 @@ const THEAvailabilityVote = () => {
           [pollId]: { 
             ...prev[pollId], 
             title: newTitle.trim(),
-            month: newMonth,
-            year: newYear
+            startDate: newStartDate,
+            endDate: newEndDate,
+            month: startDateObj.getMonth(),
+            year: startDateObj.getFullYear()
           }
         }));
       }
@@ -151,8 +165,8 @@ const THEAvailabilityVote = () => {
       // Reset editing state
       setEditingPollId(null);
       setEditingTitle('');
-      setEditingMonth(7);
-      setEditingYear(2025);
+      setEditingStartDate('');
+      setEditingEndDate('');
     } catch (error) {
       console.error('Error saving edited poll:', error);
     }
@@ -174,8 +188,8 @@ const THEAvailabilityVote = () => {
   
   // Poll creation states
   const [newPollTitle, setNewPollTitle] = useState('');
-  const [newPollMonth, setNewPollMonth] = useState(7); // Default July
-  const [newPollYear, setNewPollYear] = useState(2025);
+  const [newPollStartDate, setNewPollStartDate] = useState('');
+  const [newPollEndDate, setNewPollEndDate] = useState('');
   const [currentPollId, setCurrentPollId] = useState(null);
 
   useEffect(() => {
@@ -363,6 +377,26 @@ const THEAvailabilityVote = () => {
 
   const getMonthName = (index) => {
     return lang === 'th' ? monthsTH[index] : months[index];
+  };
+
+  const formatDateRange = (poll) => {
+    if (poll.startDate && poll.endDate) {
+      const start = new Date(poll.startDate);
+      const end = new Date(poll.endDate);
+      const startStr = start.toLocaleDateString(lang === 'th' ? 'th-TH' : 'en-US', { 
+        day: 'numeric', 
+        month: 'short', 
+        year: 'numeric' 
+      });
+      const endStr = end.toLocaleDateString(lang === 'th' ? 'th-TH' : 'en-US', { 
+        day: 'numeric', 
+        month: 'short', 
+        year: 'numeric' 
+      });
+      return `${startStr} - ${endStr}`;
+    }
+    // Fallback to old format
+    return `${getMonthName(poll.month)} ${poll.year}`;
   };
 
   const getDaysInMonth = (month, year) => {
@@ -581,16 +615,30 @@ const THEAvailabilityVote = () => {
         return;
       }
       
+      if (!newPollStartDate || !newPollEndDate) {
+        alert('Please select both start and end dates');
+        return;
+      }
+      
+      if (new Date(newPollStartDate) > new Date(newPollEndDate)) {
+        alert('Start date must be before end date');
+        return;
+      }
+      
       setIsSaving(true);
       
       try {
         // Store poll metadata in localStorage with unique timestamp ID
         const timestamp = Date.now();
         const pollKey = `poll_${timestamp}`;
+        const startDateObj = new Date(newPollStartDate);
         const pollData = {
           title: newPollTitle.trim(),
-          month: newPollMonth,
-          year: newPollYear,
+          startDate: newPollStartDate,
+          endDate: newPollEndDate,
+          // Keep legacy fields for compatibility
+          month: startDateObj.getMonth(),
+          year: startDateObj.getFullYear(),
           createdAt: new Date().toISOString(),
           createdBy: 'admin',
           id: pollKey
@@ -607,8 +655,8 @@ const THEAvailabilityVote = () => {
         
         // Set the current poll ID and poll data, then navigate to voting interface
         setCurrentPollId(pollKey);
-        setSelectedMonth(newPollMonth);
-        setSelectedYear(newPollYear);
+        setSelectedMonth(startDateObj.getMonth());
+        setSelectedYear(startDateObj.getFullYear());
         setCurrentRoute('availability');
         setCurrentPage('main');
         setCurrentStep(1);
@@ -619,8 +667,8 @@ const THEAvailabilityVote = () => {
         
         // Reset form
         setNewPollTitle('');
-        setNewPollMonth(7);
-        setNewPollYear(2025);
+        setNewPollStartDate('');
+        setNewPollEndDate('');
         
       } catch (error) {
         alert('Failed to create poll: ' + error.message);
@@ -682,32 +730,26 @@ const THEAvailabilityVote = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    Default Month *
+                    Start Date *
                   </label>
-                  <select
-                    value={newPollMonth}
-                    onChange={(e) => setNewPollMonth(parseInt(e.target.value))}
+                  <input
+                    type="date"
+                    value={newPollStartDate}
+                    onChange={(e) => setNewPollStartDate(e.target.value)}
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300 bg-white'}`}
-                  >
-                    {months.map((month, index) => (
-                      <option key={index} value={index}>{getMonthName(index)}</option>
-                    ))}
-                  </select>
+                  />
                 </div>
 
                 <div>
                   <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    Year *
+                    End Date *
                   </label>
-                  <select
-                    value={newPollYear}
-                    onChange={(e) => setNewPollYear(parseInt(e.target.value))}
+                  <input
+                    type="date"
+                    value={newPollEndDate}
+                    onChange={(e) => setNewPollEndDate(e.target.value)}
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300 bg-white'}`}
-                  >
-                    {[2024, 2025, 2026, 2027].map(year => (
-                      <option key={year} value={year}>{year}</option>
-                    ))}
-                  </select>
+                  />
                 </div>
               </div>
 
@@ -717,7 +759,10 @@ const THEAvailabilityVote = () => {
                 </h3>
                 <div className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                   <div><strong>Title:</strong> {newPollTitle || 'Untitled Poll'}</div>
-                  <div><strong>Period:</strong> {getMonthName(newPollMonth)} {newPollYear}</div>
+                  <div><strong>Period:</strong> {newPollStartDate && newPollEndDate ? 
+                    `${new Date(newPollStartDate).toLocaleDateString(lang === 'th' ? 'th-TH' : 'en-US')} - ${new Date(newPollEndDate).toLocaleDateString(lang === 'th' ? 'th-TH' : 'en-US')}` : 
+                    'Select date range'
+                  }</div>
                   <div><strong>URL:</strong> /availability</div>
                 </div>
               </div>
@@ -730,7 +775,10 @@ const THEAvailabilityVote = () => {
                       How it works:
                     </div>
                     <ul className={`mt-1 space-y-1 ${isDarkMode ? 'text-blue-200' : 'text-blue-700'}`}>
-                      <li>• Poll will be created for {getMonthName(newPollMonth)} {newPollYear}</li>
+                      <li>• Poll will be created for {newPollStartDate && newPollEndDate ? 
+                        `${new Date(newPollStartDate).toLocaleDateString(lang === 'th' ? 'th-TH' : 'en-US')} - ${new Date(newPollEndDate).toLocaleDateString(lang === 'th' ? 'th-TH' : 'en-US')}` : 
+                        'your selected date range'
+                      }</li>
                       <li>• Users can vote on their availability for each day</li>
                       <li>• Results will be visible in the admin dashboard</li>
                       <li>• You can share the voting link with participants</li>
@@ -896,47 +944,45 @@ const THEAvailabilityVote = () => {
                               onChange={(e) => setEditingTitle(e.target.value)}
                               onKeyPress={(e) => {
                                 if (e.key === 'Enter') {
-                                  saveEditedPoll(poll.id, editingTitle, editingMonth, editingYear);
+                                  saveEditedPoll(poll.id, editingTitle, editingStartDate, editingEndDate);
                                 } else if (e.key === 'Escape') {
                                   setEditingPollId(null);
                                   setEditingTitle('');
+                                  setEditingStartDate('');
+                                  setEditingEndDate('');
                                 }
                               }}
                               className={`w-full px-2 py-1 text-sm border rounded ${isDarkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300'}`}
                               placeholder="Enter poll title"
                               autoFocus
                             />
-                            <div className="flex gap-2">
-                              <select
-                                value={editingMonth}
-                                onChange={(e) => setEditingMonth(parseInt(e.target.value))}
-                                className={`flex-1 px-2 py-1 text-sm border rounded ${isDarkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300'}`}
-                              >
-                                <option value={1}>January</option>
-                                <option value={2}>February</option>
-                                <option value={3}>March</option>
-                                <option value={4}>April</option>
-                                <option value={5}>May</option>
-                                <option value={6}>June</option>
-                                <option value={7}>July</option>
-                                <option value={8}>August</option>
-                                <option value={9}>September</option>
-                                <option value={10}>October</option>
-                                <option value={11}>November</option>
-                                <option value={12}>December</option>
-                              </select>
-                              <input
-                                type="number"
-                                value={editingYear}
-                                onChange={(e) => setEditingYear(parseInt(e.target.value))}
-                                min="2024"
-                                max="2030"
-                                className={`w-20 px-2 py-1 text-sm border rounded ${isDarkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300'}`}
-                              />
+                            <div className="space-y-2">
+                              <div>
+                                <label className={`block text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                                  Start Date
+                                </label>
+                                <input
+                                  type="date"
+                                  value={editingStartDate}
+                                  onChange={(e) => setEditingStartDate(e.target.value)}
+                                  className={`w-full px-2 py-1 text-sm border rounded ${isDarkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300'}`}
+                                />
+                              </div>
+                              <div>
+                                <label className={`block text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                                  End Date
+                                </label>
+                                <input
+                                  type="date"
+                                  value={editingEndDate}
+                                  onChange={(e) => setEditingEndDate(e.target.value)}
+                                  className={`w-full px-2 py-1 text-sm border rounded ${isDarkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300'}`}
+                                />
+                              </div>
                             </div>
                             <div className="flex gap-2">
                               <button
-                                onClick={() => saveEditedPoll(poll.id, editingTitle, editingMonth, editingYear)}
+                                onClick={() => saveEditedPoll(poll.id, editingTitle, editingStartDate, editingEndDate)}
                                 className="bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700"
                                 title="Save changes"
                               >
@@ -946,6 +992,8 @@ const THEAvailabilityVote = () => {
                                 onClick={() => {
                                   setEditingPollId(null);
                                   setEditingTitle('');
+                                  setEditingStartDate('');
+                                  setEditingEndDate('');
                                 }}
                                 className="bg-gray-600 text-white px-3 py-1 rounded text-xs hover:bg-gray-700"
                                 title="Cancel editing"
@@ -958,11 +1006,11 @@ const THEAvailabilityVote = () => {
                           <div className="flex items-center gap-2">
                             <div>
                               <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                                {poll.title || `${getMonthName(poll.month)} ${poll.year}`}
+                                {poll.title || formatDateRange(poll)}
                               </h3>
                               {poll.title && (
                                 <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                                  {getMonthName(poll.month)} {poll.year}
+                                  {formatDateRange(poll)}
                                 </p>
                               )}
                             </div>
@@ -971,8 +1019,11 @@ const THEAvailabilityVote = () => {
                                 onClick={() => {
                                   setEditingPollId(poll.id);
                                   setEditingTitle(poll.title || `${getMonthName(poll.month)} ${poll.year}`);
-                                  setEditingMonth(poll.month);
-                                  setEditingYear(poll.year);
+                                  // Set default date range if not exists
+                                  const defaultStart = poll.startDate || `${poll.year}-${String(poll.month + 1).padStart(2, '0')}-01`;
+                                  const defaultEnd = poll.endDate || `${poll.year}-${String(poll.month + 1).padStart(2, '0')}-${new Date(poll.year, poll.month + 1, 0).getDate()}`;
+                                  setEditingStartDate(defaultStart);
+                                  setEditingEndDate(defaultEnd);
                                 }}
                                 className="bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700 transition-colors ml-2"
                                 title="Edit poll title and date range"
