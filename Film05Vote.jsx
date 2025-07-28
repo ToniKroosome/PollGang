@@ -170,10 +170,11 @@ const THEAvailabilityVote = () => {
     };
   }, []);
 
-  // Check URL for poll ID on mount
+  // Check URL for poll ID and view mode on mount
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const pollIdFromUrl = urlParams.get('poll');
+    const viewMode = urlParams.get('view');
     
     if (pollIdFromUrl) {
       // Load the specific poll from URL
@@ -184,8 +185,16 @@ const THEAvailabilityVote = () => {
           setCurrentPollId(pollIdFromUrl);
           setSelectedMonth(poll.month);
           setSelectedYear(poll.year);
+          setViewMonth(poll.month);
+          setViewYear(poll.year);
           setCurrentRoute('availability');
-          setCurrentPage('main');
+          
+          // Check if we should show results view
+          if (viewMode === 'results') {
+            setCurrentPage('view');
+          } else {
+            setCurrentPage('main');
+          }
         } catch (error) {
           console.error('Error loading poll from URL:', error);
         }
@@ -852,6 +861,12 @@ const THEAvailabilityVote = () => {
                             setViewYear(poll.year);
                             setCurrentRoute('availability');
                             setCurrentPage('view');
+                            
+                            // Update URL for results view
+                            if (poll.id) {
+                              const newUrl = `${window.location.pathname}?poll=${poll.id}&view=results`;
+                              window.history.pushState({}, '', newUrl);
+                            }
                           }}
                           className="flex-1 bg-green-600 text-white py-2 px-3 rounded text-sm hover:bg-green-700 transition-colors"
                         >
@@ -1226,6 +1241,27 @@ const THEAvailabilityVote = () => {
                 {t('allTHEs')}
               </h1>
               <div className="flex gap-3 items-center">
+                {currentPollId && (
+                  <button
+                    onClick={() => {
+                      const resultsUrl = `${window.location.origin}${window.location.pathname}?poll=${currentPollId}&view=results`;
+                      navigator.clipboard.writeText(resultsUrl);
+                      // Show temporary feedback
+                      const button = event.target;
+                      const originalText = button.textContent;
+                      button.textContent = 'Copied!';
+                      button.className = button.className.replace('bg-purple-600 hover:bg-purple-700', 'bg-green-600');
+                      setTimeout(() => {
+                        button.textContent = originalText;
+                        button.className = button.className.replace('bg-green-600', 'bg-purple-600 hover:bg-purple-700');
+                      }, 2000);
+                    }}
+                    className="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700 transition-colors"
+                    title="Copy shareable link for these results"
+                  >
+                    📋 Share Results
+                  </button>
+                )}
                 {!isAdmin && (
                   <button
                     onClick={() => setShowAdminLogin(true)}
