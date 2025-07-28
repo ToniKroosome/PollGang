@@ -1659,17 +1659,35 @@ const THEAvailabilityVote = () => {
         
         {currentStep === 1 && (
           <div className="flex flex-col items-center justify-center min-h-screen">
-            <div className={`rounded-xl shadow-lg p-8 max-w-md w-full ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white'}`}>
-              <div className="flex justify-between items-center mb-8">
-                <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                  {currentPollId && pollsData[currentPollId] ? pollsData[currentPollId].title : t('siteTitle')}
-                </h1>
+            <div className={`rounded-xl shadow-lg p-8 max-w-lg w-full ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white'}`}>
+              {/* Header with dark mode toggle */}
+              <div className="flex justify-end mb-4">
                 <button
                   onClick={() => setIsDarkMode(!isDarkMode)}
                   className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-yellow-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'}`}
                 >
                   {isDarkMode ? '☀️' : '🌙'}
                 </button>
+              </div>
+
+              {/* Poll Title - More spacious */}
+              <div className="text-center mb-8">
+                <h1 className={`text-2xl font-bold leading-relaxed mb-4 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                  {currentPollId && pollsData[currentPollId] ? pollsData[currentPollId].title : t('siteTitle')}
+                </h1>
+                
+                {/* Date Range Display */}
+                <div className={`p-4 rounded-lg border-2 border-dashed mb-6 ${isDarkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-gray-50'}`}>
+                  <div className="text-sm font-medium mb-2">
+                    📅 {lang === 'th' ? 'ช่วงเวลาที่ต้องการสำรวจ' : 'Date Range for Voting'}
+                  </div>
+                  <div className={`text-lg font-semibold ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                    {t('monthYear', { month: getMonthName(selectedMonth), year: selectedYear })}
+                  </div>
+                  <div className="text-xs mt-1 opacity-75">
+                    {lang === 'th' ? 'เลือกวันที่ว่างในเดือนนี้' : 'Select your available dates this month'}
+                  </div>
+                </div>
               </div>
               
               <div className="mb-6">
