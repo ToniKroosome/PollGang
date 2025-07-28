@@ -1583,7 +1583,7 @@ const THEAvailabilityVote = () => {
                       // Update URL to remove view=results
                       const pollData = pollsData[currentPollId];
                       const titleSlug = pollData ? 
-                        (pollData.title || `${getMonthName(pollData.month)}-${pollData.year}`)
+                        (pollData.title || formatDateRange(pollData))
                           .toLowerCase()
                           .replace(/[^a-z0-9\s]/g, '')
                           .replace(/\s+/g, '-')
@@ -1874,7 +1874,23 @@ const THEAvailabilityVote = () => {
               
               <div className="mb-6">
                 <button
-                  onClick={() => setCurrentPage('view')}
+                  onClick={() => {
+                    setCurrentPage('view');
+                    
+                    // Update URL to include view=results
+                    if (currentPollId) {
+                      const pollData = pollsData[currentPollId];
+                      const titleSlug = pollData ? 
+                        (pollData.title || formatDateRange(pollData))
+                          .toLowerCase()
+                          .replace(/[^a-z0-9\s]/g, '')
+                          .replace(/\s+/g, '-')
+                          .substring(0, 30)
+                        : 'poll';
+                      const newUrl = `${window.location.pathname}?poll=${titleSlug}-${currentPollId}&view=results`;
+                      window.history.pushState({}, '', newUrl);
+                    }
+                  }}
                   className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold"
                 >
                   {t('seeAllBtn')}
