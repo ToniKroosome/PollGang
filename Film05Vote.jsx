@@ -395,8 +395,15 @@ const THEAvailabilityVote = () => {
       });
       return `${startStr} - ${endStr}`;
     }
-    // Fallback to old format
-    return `${getMonthName(poll.month)} ${poll.year}`;
+    // Fallback to old format - but fix potential 1-based month issue
+    let monthIndex = poll.month;
+    
+    // Fix potential 1-based month indexing for legacy polls
+    if (monthIndex > 11) {
+      monthIndex = monthIndex - 1; // Convert from 1-based to 0-based
+    }
+    
+    return `${getMonthName(monthIndex)} ${poll.year}`;
   };
 
   const getDaysInMonth = (month, year) => {
@@ -811,6 +818,33 @@ const THEAvailabilityVote = () => {
 
   // Poll List Page
   if (currentRoute === 'poll-list') {
+    // Migration: Fix any polls with 1-based month indexing (run once per session)
+    React.useEffect(() => {
+      let needsUpdate = false;
+      const updatedPolls = {};
+      
+      Object.entries(pollsData).forEach(([pollId, poll]) => {
+        if (poll.month > 11) {
+          updatedPolls[pollId] = {
+            ...poll,
+            month: poll.month - 1  // Convert from 1-based to 0-based
+          };
+          
+          // Update localStorage
+          try {
+            localStorage.setItem(pollId, JSON.stringify(updatedPolls[pollId]));
+            needsUpdate = true;
+          } catch (error) {
+            console.error('Error updating poll in localStorage:', error);
+          }
+        }
+      });
+      
+      if (needsUpdate) {
+        setPollsData(prev => ({ ...prev, ...updatedPolls }));
+      }
+    }, [pollsData]);
+    
     // Combine actual polls with submission data
     const pollsList = [];
     
@@ -1020,8 +1054,16 @@ const THEAvailabilityVote = () => {
                                   setEditingPollId(poll.id);
                                   setEditingTitle(poll.title || `${getMonthName(poll.month)} ${poll.year}`);
                                   // Set default date range if not exists
-                                  const defaultStart = poll.startDate || `${poll.year}-${String(poll.month + 1).padStart(2, '0')}-01`;
-                                  const defaultEnd = poll.endDate || `${poll.year}-${String(poll.month + 1).padStart(2, '0')}-${new Date(poll.year, poll.month + 1, 0).getDate()}`;
+                                  // Fix potential month indexing issue: ensure we use 0-based months correctly
+                                  let monthForDate = poll.month;
+                                  
+                                  // If month > 11, it's likely 1-based, convert to 0-based
+                                  if (monthForDate > 11) {
+                                    monthForDate = monthForDate - 1;
+                                  }
+                                  
+                                  const defaultStart = poll.startDate || `${poll.year}-${String(monthForDate + 1).padStart(2, '0')}-01`;
+                                  const defaultEnd = poll.endDate || `${poll.year}-${String(monthForDate + 1).padStart(2, '0')}-${new Date(poll.year, monthForDate + 1, 0).getDate()}`;
                                   setEditingStartDate(defaultStart);
                                   setEditingEndDate(defaultEnd);
                                 }}
