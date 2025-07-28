@@ -1283,10 +1283,22 @@ const THEAvailabilityVote = () => {
                   {isDarkMode ? '☀️' : '🌙'}
                 </button>
                 <button
-                  onClick={() => setCurrentRoute('admin-main')}
+                  onClick={() => {
+                    if (currentPollId) {
+                      // Go back to the specific poll's voting page
+                      setCurrentPage('main');
+                      setCurrentStep(1);
+                      // Update URL to remove view=results
+                      const newUrl = `${window.location.pathname}?poll=${currentPollId}`;
+                      window.history.pushState({}, '', newUrl);
+                    } else {
+                      // If no poll context, go to admin dashboard
+                      setCurrentRoute('admin-main');
+                    }
+                  }}
                   className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  ← Dashboard
+                  ← {currentPollId ? 'Back to Poll' : 'Dashboard'}
                 </button>
               </div>
             </div>
