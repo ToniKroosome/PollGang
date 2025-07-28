@@ -1557,14 +1557,16 @@ const THEAvailabilityVote = () => {
                 </button>
               </div>
               
-              <div className="mb-6">
-                <button
-                  onClick={() => setCurrentRoute('admin-main')}
-                  className="w-full bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm"
-                >
-                  ← Back to Dashboard
-                </button>
-              </div>
+              {isAdmin && (
+                <div className="mb-6">
+                  <button
+                    onClick={() => setCurrentRoute('admin-main')}
+                    className="w-full bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                  >
+                    ← Back to Dashboard
+                  </button>
+                </div>
+              )}
               
               <div className="space-y-4">
                 <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
