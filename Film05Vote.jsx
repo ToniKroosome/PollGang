@@ -204,16 +204,21 @@ const THEAvailabilityVote = () => {
   // Check URL for poll ID and view mode on mount
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const pollIdFromUrl = urlParams.get('poll');
+    const pollParam = urlParams.get('poll');
     const viewMode = urlParams.get('view');
     
-    if (pollIdFromUrl) {
+    if (pollParam) {
+      // Extract actual poll ID from descriptive URL
+      // Format: "title-slug-poll_timestamp" -> extract "poll_timestamp"
+      const pollIdMatch = pollParam.match(/(poll_\d+)$/);
+      const pollId = pollIdMatch ? pollIdMatch[1] : pollParam;
+      
       // Load the specific poll from URL
-      const pollData = localStorage.getItem(pollIdFromUrl);
+      const pollData = localStorage.getItem(pollId);
       if (pollData) {
         try {
           const poll = JSON.parse(pollData);
-          setCurrentPollId(pollIdFromUrl);
+          setCurrentPollId(pollId);
           setSelectedMonth(poll.month);
           setSelectedYear(poll.year);
           setViewMonth(poll.month);
@@ -949,7 +954,12 @@ const THEAvailabilityVote = () => {
                             
                             // Update URL for results view
                             if (poll.id) {
-                              const newUrl = `${window.location.pathname}?poll=${poll.id}&view=results`;
+                              const titleSlug = (poll.title || `${getMonthName(poll.month)}-${poll.year}`)
+                                .toLowerCase()
+                                .replace(/[^a-z0-9\s]/g, '')
+                                .replace(/\s+/g, '-')
+                                .substring(0, 30);
+                              const newUrl = `${window.location.pathname}?poll=${titleSlug}-${poll.id}&view=results`;
                               window.history.pushState({}, '', newUrl);
                             }
                           }}
@@ -976,7 +986,13 @@ const THEAvailabilityVote = () => {
                         <div className="flex gap-2">
                           <button
                             onClick={() => {
-                              const pollUrl = `${window.location.origin}${window.location.pathname}?poll=${poll.id}`;
+                              // Create descriptive URL with poll title
+                              const titleSlug = (poll.title || `${getMonthName(poll.month)}-${poll.year}`)
+                                .toLowerCase()
+                                .replace(/[^a-z0-9\s]/g, '')
+                                .replace(/\s+/g, '-')
+                                .substring(0, 30);
+                              const pollUrl = `${window.location.origin}${window.location.pathname}?poll=${titleSlug}-${poll.id}`;
                               navigator.clipboard.writeText(pollUrl);
                               // Show temporary feedback
                               const button = event.target;
@@ -995,7 +1011,13 @@ const THEAvailabilityVote = () => {
                           </button>
                           <button
                             onClick={() => {
-                              const pollUrl = `${window.location.origin}${window.location.pathname}?poll=${poll.id}`;
+                              // Create descriptive URL with poll title
+                              const titleSlug = (poll.title || `${getMonthName(poll.month)}-${poll.year}`)
+                                .toLowerCase()
+                                .replace(/[^a-z0-9\s]/g, '')
+                                .replace(/\s+/g, '-')
+                                .substring(0, 30);
+                              const pollUrl = `${window.location.origin}${window.location.pathname}?poll=${titleSlug}-${poll.id}`;
                               window.open(pollUrl, '_blank');
                             }}
                             className="flex-1 bg-gray-600 text-white py-1 px-2 rounded text-xs hover:bg-gray-700 transition-colors"
@@ -1329,7 +1351,16 @@ const THEAvailabilityVote = () => {
                 {currentPollId && (
                   <button
                     onClick={() => {
-                      const resultsUrl = `${window.location.origin}${window.location.pathname}?poll=${currentPollId}&view=results`;
+                      // Get poll data to create descriptive URL
+                      const pollData = pollsData[currentPollId];
+                      const titleSlug = pollData ? 
+                        (pollData.title || `${getMonthName(pollData.month)}-${pollData.year}`)
+                          .toLowerCase()
+                          .replace(/[^a-z0-9\s]/g, '')
+                          .replace(/\s+/g, '-')
+                          .substring(0, 30)
+                        : 'poll';
+                      const resultsUrl = `${window.location.origin}${window.location.pathname}?poll=${titleSlug}-${currentPollId}&view=results`;
                       navigator.clipboard.writeText(resultsUrl);
                       // Show temporary feedback
                       const button = event.target;
@@ -1374,7 +1405,15 @@ const THEAvailabilityVote = () => {
                       setCurrentPage('main');
                       setCurrentStep(1);
                       // Update URL to remove view=results
-                      const newUrl = `${window.location.pathname}?poll=${currentPollId}`;
+                      const pollData = pollsData[currentPollId];
+                      const titleSlug = pollData ? 
+                        (pollData.title || `${getMonthName(pollData.month)}-${pollData.year}`)
+                          .toLowerCase()
+                          .replace(/[^a-z0-9\s]/g, '')
+                          .replace(/\s+/g, '-')
+                          .substring(0, 30)
+                        : 'poll';
+                      const newUrl = `${window.location.pathname}?poll=${titleSlug}-${currentPollId}`;
                       window.history.pushState({}, '', newUrl);
                     } else {
                       // If no poll context, go to admin dashboard
