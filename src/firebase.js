@@ -154,13 +154,20 @@ export const film05Service = {
   // Time availability functions
   async saveTimeAvailability(timeData) {
     try {
-      const docRef = doc(db, 'film05_time_availability', timeData.name || 'anonymous');
+      // Validate that name exists and is not empty
+      if (!timeData.name || timeData.name.trim() === '') {
+        console.error('❌ Cannot save time availability: name is empty');
+        return { success: false, error: 'Name is required and cannot be empty' };
+      }
+      
+      const docRef = doc(db, 'film05_time_availability', timeData.name.trim());
       await setDoc(docRef, {
         ...timeData,
+        name: timeData.name.trim(), // Ensure name is trimmed
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
-      console.log('✅ Film05 time availability saved:', timeData.name);
+      console.log('✅ Film05 time availability saved:', timeData.name.trim());
       return { success: true };
     } catch (error) {
       console.error('❌ Error saving Film05 time availability:', error);

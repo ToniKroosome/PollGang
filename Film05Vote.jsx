@@ -1446,6 +1446,29 @@ const THEAvailabilityVote = () => {
                 <p className={`mb-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                   {lang === 'th' ? 'ยังไม่มีใครโหวตเวลาที่สะดวก' : 'No one has voted on time availability yet'}
                 </p>
+                
+                {/* Debug Info */}
+                <div className={`mb-4 p-3 rounded text-xs ${isDarkMode ? 'bg-gray-600' : 'bg-gray-100'}`}>
+                  <strong>Debug Info:</strong><br/>
+                  timeSubmissions keys: {Object.keys(timeSubmissions).length}<br/>
+                  timeSubmissions: {JSON.stringify(timeSubmissions, null, 2)}
+                </div>
+                
+                <button
+                  onClick={async () => {
+                    console.log('🔍 Debug: Reloading time submissions...');
+                    const result = await film05Service.loadTimeAvailability();
+                    console.log('🔍 Debug: LoadTimeAvailability result:', result);
+                    if (result.success) {
+                      setTimeSubmissions(result.data);
+                      console.log('🔍 Debug: Updated timeSubmissions:', result.data);
+                    }
+                  }}
+                  className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors text-sm mr-4"
+                >
+                  🔍 Debug: Reload Data
+                </button>
+                
                 <button
                   onClick={() => {
                     setCurrentTimePage('main');
@@ -1860,6 +1883,10 @@ const THEAvailabilityVote = () => {
             <div className="flex justify-end">
               <button
                 onClick={async () => {
+                  console.log('🔍 Debug: Save button clicked');
+                  console.log('🔍 Debug: timeUserName:', `"${timeUserName}"`);
+                  console.log('🔍 Debug: timeUserName.trim():', `"${timeUserName.trim()}"`);
+                  
                   if (!timeUserName.trim()) {
                     alert(lang === 'th' ? 'กรุณากรอกชื่อของคุณ' : 'Please enter your name');
                     return;
@@ -1875,9 +1902,11 @@ const THEAvailabilityVote = () => {
                     };
                     
                     const timeData = {
-                      name: timeUserName,
+                      name: timeUserName.trim(),
                       timeAvailability: updatedAvailability
                     };
+                    
+                    console.log('🔍 Debug: Final timeData being sent to Firebase:', timeData);
                     
                     const result = await film05Service.saveTimeAvailability(timeData);
                     
