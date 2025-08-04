@@ -370,9 +370,11 @@ const THEAvailabilityVote = () => {
           break;
         case 'time-availability':
           setCurrentRoute('time-availability');
+          setCurrentTimePage('main');
           break;
         case 'time-results':
-          setCurrentRoute('time-results');
+          setCurrentRoute('time-availability');
+          setCurrentTimePage('view');
           break;
         case 'availability':
           setCurrentRoute('availability');
@@ -1383,6 +1385,7 @@ const THEAvailabilityVote = () => {
                 <button
                   onClick={() => {
                     setCurrentTimePage('main');
+                    updateURL('time-availability');
                   }}
                   className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                 >
@@ -1877,7 +1880,10 @@ const THEAvailabilityVote = () => {
             {Object.keys(timeSubmissions).length > 0 && (
               <div className="flex justify-center mt-6">
                 <button
-                  onClick={() => setCurrentTimePage('view')}
+                  onClick={() => {
+                    setCurrentTimePage('view');
+                    updateURL('time-results');
+                  }}
                   className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold text-lg"
                 >
                   👥 {lang === 'th' ? 'ตารางเวลาว่างของทุกคน' : 'See Everyone\'s Time Availability'}
