@@ -193,6 +193,7 @@ const THEAvailabilityVote = () => {
     try {
       const availabilityRecovery = localStorage.getItem('film05_recovery_availability');
       const timeRecovery = localStorage.getItem('film05_recovery_time');
+      const timePollCreationRecovery = localStorage.getItem('film05_recovery_time-poll-creation');
       
       if (availabilityRecovery) {
         const data = JSON.parse(availabilityRecovery);
@@ -207,6 +208,16 @@ const THEAvailabilityVote = () => {
       
       if (timeRecovery) {
         const data = JSON.parse(timeRecovery);
+        const timeDiff = new Date() - new Date(data.timestamp);
+        if (timeDiff < 24 * 60 * 60 * 1000) {
+          setRecoveryData(data);
+          setShowRecoveryModal(true);
+          return;
+        }
+      }
+
+      if (timePollCreationRecovery) {
+        const data = JSON.parse(timePollCreationRecovery);
         const timeDiff = new Date() - new Date(data.timestamp);
         if (timeDiff < 24 * 60 * 60 * 1000) {
           setRecoveryData(data);
@@ -238,6 +249,11 @@ const THEAvailabilityVote = () => {
         setSelectedTimeDate(new Date(recoveryData.data.selectedDate || new Date()));
         setCurrentRoute('time-availability');
         setCurrentTimePage(recoveryData.currentTimePage || 'main');
+      } else if (recoveryData.type === 'time-poll-creation') {
+        setNewTimePollTitle(recoveryData.data.timePollTitle || '');
+        setSelectedTimeDate(new Date(recoveryData.data.selectedTimeDate || new Date()));
+        setCurrentTimePollId(recoveryData.data.currentTimePollId || null);
+        setCurrentRoute('create-time-poll');
       }
       
       // Restore navigation history if available
@@ -364,6 +380,19 @@ const THEAvailabilityVote = () => {
       setHasUnsavedChanges(true);
     }
   }, [timeUserName, timeAvailability, selectedTimeDate]);
+
+  // Auto-save time poll creation data
+  useEffect(() => {
+    if (newTimePollTitle.trim()) {
+      const saveData = {
+        timePollTitle: newTimePollTitle,
+        selectedTimeDate: selectedTimeDate.toISOString(),
+        currentTimePollId
+      };
+      saveToRecovery(saveData, 'time-poll-creation');
+      setHasUnsavedChanges(true);
+    }
+  }, [newTimePollTitle, selectedTimeDate, currentTimePollId]);
 
   // Warn before leaving with unsaved changes
   useEffect(() => {
@@ -3087,8 +3116,16 @@ const THEAvailabilityVote = () => {
             </h3>
             <p className={`mb-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
               {lang === 'th' 
-                ? `พบข้อมูลการโหวต${recoveryData.type === 'time' ? 'เวลา' : 'วันที่'}ที่ยังไม่ได้บันทึกจาก ${new Date(recoveryData.timestamp).toLocaleString()} คุณต้องการกู้คืนข้อมูลหรือไม่?`
-                : `Found unsaved ${recoveryData.type === 'time' ? 'time' : 'date'} voting data from ${new Date(recoveryData.timestamp).toLocaleString()}. Would you like to recover it?`
+                ? `พบข้อมูล${
+                    recoveryData.type === 'time' ? 'การโหวตเวลา' : 
+                    recoveryData.type === 'time-poll-creation' ? 'การสร้างโพลเวลา' : 
+                    'การโหวตวันที่'
+                  }ที่ยังไม่ได้บันทึกจาก ${new Date(recoveryData.timestamp).toLocaleString()} คุณต้องการกู้คืนข้อมูลหรือไม่?`
+                : `Found unsaved ${
+                    recoveryData.type === 'time' ? 'time voting' : 
+                    recoveryData.type === 'time-poll-creation' ? 'time poll creation' : 
+                    'date voting'
+                  } data from ${new Date(recoveryData.timestamp).toLocaleString()}. Would you like to recover it?`
               }
             </p>
             <div className="space-y-2">
