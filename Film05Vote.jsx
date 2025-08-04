@@ -841,8 +841,7 @@ const THEAvailabilityVote = () => {
                 </p>
                 <button
                   onClick={() => {
-                    navigateToRoute('time-availability', 'time-availability');
-                    setCurrentTimePage('main');
+                    navigateToRoute('create-time-poll', 'create-time-poll');
                   }}
                   className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold w-full"
                 >
