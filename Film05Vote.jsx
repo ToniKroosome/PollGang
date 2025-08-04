@@ -176,7 +176,10 @@ const THEAvailabilityVote = () => {
         timestamp: new Date().toISOString(),
         type,
         route: currentRoute,
-        step: currentStep
+        step: currentStep,
+        navigationHistory, // Include navigation history
+        currentPage,
+        currentTimePage // Include time page state
       };
       localStorage.setItem(recoveryKey, JSON.stringify(recoveryData));
       setLastSaved(new Date());
@@ -228,11 +231,18 @@ const THEAvailabilityVote = () => {
         setPreferredRestaurant(recoveryData.data.restaurant || '');
         setCurrentRoute('availability');
         setCurrentStep(recoveryData.step || 1);
+        setCurrentPage(recoveryData.currentPage || 'main');
       } else if (recoveryData.type === 'time') {
         setTimeUserName(recoveryData.data.name || '');
         setTimeAvailability(recoveryData.data.timeAvailability || {});
         setSelectedTimeDate(new Date(recoveryData.data.selectedDate || new Date()));
         setCurrentRoute('time-availability');
+        setCurrentTimePage(recoveryData.currentTimePage || 'main');
+      }
+      
+      // Restore navigation history if available
+      if (recoveryData.navigationHistory && Array.isArray(recoveryData.navigationHistory)) {
+        setNavigationHistory(recoveryData.navigationHistory);
       }
       
       // Clear recovery data

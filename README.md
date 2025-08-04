@@ -38,10 +38,12 @@ A bilingual (Thai/English) web application for Film 05 group members to vote on 
 - **Shareable Poll Links**: Direct URLs for specific polls
 - **Copy Poll URLs**: Easy sharing with one-click copy functionality
 
-### Crash Recovery System
+### Crash Recovery System (v2.0)
 - **Auto-Save**: Automatically saves voting progress to prevent data loss
 - **Recovery Detection**: Detects unsaved data when app is reopened
 - **Smart Recovery**: Recovers partial votes, names, and selections up to 24 hours old
+- **Navigation-Aware Recovery**: Works with new navigation history system
+- **Multi-Flow Recovery**: Supports both date and time availability flows
 - **Warning System**: Warns users before leaving with unsaved changes
 - **Bilingual Recovery**: Recovery messages in both Thai and English
 
@@ -134,10 +136,20 @@ https://pollgang.onrender.com/?page=results&poll=poll_1699123456789      # Speci
 ### Navigation Structure
 
 ```
-Main Entry → Name Input → Calendar Selection → Restaurant Preference → Submission Complete
-     ↓
-Admin Login → Dashboard → Poll List → Create/View/Manage Polls
+Homepage
+├── Date Availability Flow:
+│   Start Voting → Name Input → Calendar Selection → Restaurant Preference → Submission Complete
+├── Time Availability Flow:
+│   Select Times → Name Input → Time Selection → Submission Complete
+└── Admin Flow:
+    Admin Access → Dashboard → Poll List → Create/View/Manage Polls
 ```
+
+### Navigation Features (v2.0)
+- **Smart Back Navigation**: Back buttons now properly navigate to the previous page instead of defaulting to admin login
+- **Navigation History Tracking**: System tracks where users came from for proper back navigation
+- **Consistent User Flow**: Both date and time availability follow the same name-input-first pattern
+- **URL-based Routing**: Each page has its own URL for direct access and bookmarking
 
 ## Firebase Configuration
 
@@ -237,12 +249,26 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Check browser console for debugging information
 - Firebase data can be viewed in Firebase Console
 
+## Recent Updates (v2.0)
+
+### ✅ Completed
+- [x] **Time slot selection** - Users can now vote on specific hours throughout the day
+- [x] **Fixed navigation issues** - Back buttons now work correctly with proper history tracking
+- [x] **Consistent user flows** - Both date and time voting follow the same name-input pattern
+- [x] **Smart back navigation** - No more unexpected redirects to admin login
+
+### 🔄 Enhanced Features
+- **Navigation System**: Complete overhaul with history tracking and proper back navigation
+- **Time Availability**: Full implementation with name input → time selection → submission flow
+- **User Experience**: Consistent patterns across all voting flows
+
 ## Future Enhancements
 
 - [ ] Email notifications for new polls
 - [ ] Export availability data to CSV
-- [ ] Time slot selection (not just dates)
 - [ ] Integration with calendar apps
-- [ ] Vote on multiple options (not just dates)
+- [ ] Vote on multiple options (not just dates/times)
 - [ ] Anonymous voting option
 - [ ] Poll expiration dates
+- [ ] Bulk user import
+- [ ] Calendar integration (Google Calendar, Outlook)
