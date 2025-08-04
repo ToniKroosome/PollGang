@@ -1564,6 +1564,7 @@ const THEAvailabilityVote = () => {
 
   // Create Time Poll Page
   if (currentRoute === 'create-time-poll') {
+    console.log('🚀 DEBUG: Rendering Create Time Poll Page');
     const handleCreateTimePoll = async () => {
       if (!newTimePollTitle.trim()) {
         alert(lang === 'th' ? 'กรุณาใส่ชื่อโพลเวลา' : 'Please enter a time poll title');
@@ -1609,7 +1610,8 @@ const THEAvailabilityVote = () => {
       setIsSaving(false);
     };
 
-    return (
+    try {
+      return (
       <div className={`min-h-screen p-4 ${isDarkMode ? 'bg-gradient-to-br from-gray-900 to-gray-800' : 'bg-gradient-to-br from-blue-50 to-indigo-100'} relative`}>
         <div className="absolute top-4 right-4 z-10 flex gap-2">
           <button
@@ -1719,7 +1721,25 @@ const THEAvailabilityVote = () => {
           </div>
         </div>
       </div>
-    );
+      );
+    } catch (error) {
+      console.error('🚨 Create Time Poll Page Error:', error);
+      return (
+        <div className="min-h-screen p-4 bg-red-50 flex items-center justify-center">
+          <div className="bg-white p-8 rounded-lg shadow-lg">
+            <h1 className="text-2xl font-bold text-red-600 mb-4">Create Time Poll Error</h1>
+            <p className="text-gray-600 mb-4">There was an error loading the Create Time Poll page.</p>
+            <p className="text-sm text-gray-500">Error: {error.message}</p>
+            <button
+              onClick={() => window.location.href = '/?page=time-polls'}
+              className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            >
+              ← Back to Time Polls
+            </button>
+          </div>
+        </div>
+      );
+    }
   }
 
   // Time Availability Page - View Mode (Results)
