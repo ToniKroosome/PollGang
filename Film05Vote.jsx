@@ -94,7 +94,7 @@ const useT = (lang) => (key, params = {}) => {
 
 const THEAvailabilityVote = () => {
   // Route management
-  const [currentRoute, setCurrentRoute] = useState('home'); // 'home', 'admin-main', 'poll-list', 'create-poll', 'availability', or 'time-availability'
+  const [currentRoute, setCurrentRoute] = useState('home'); // 'home', 'admin-main', 'poll-list', 'create-poll', 'availability', 'time-availability', 'time-poll-list', 'create-time-poll'
   const [navigationHistory, setNavigationHistory] = useState(['home']); // Track navigation history for proper back navigation
   const [currentPage, setCurrentPage] = useState('main');
   const [currentStep, setCurrentStep] = useState(1);
@@ -299,6 +299,11 @@ const THEAvailabilityVote = () => {
   const [newPollYear, setNewPollYear] = useState(2025);
   const [currentPollId, setCurrentPollId] = useState(null);
   
+  // Time poll states
+  const [timePolls, setTimePolls] = useState({});
+  const [newTimePollTitle, setNewTimePollTitle] = useState('');
+  const [currentTimePollId, setCurrentTimePollId] = useState(null);
+  
   // Time availability states
   const [timeAvailability, setTimeAvailability] = useState({});
   const [selectedTimeDate, setSelectedTimeDate] = useState(new Date());
@@ -419,6 +424,12 @@ const THEAvailabilityVote = () => {
           break;
         case 'create-poll':
           setCurrentRoute('create-poll');
+          break;
+        case 'time-polls':
+          setCurrentRoute('time-poll-list');
+          break;
+        case 'create-time-poll':
+          setCurrentRoute('create-time-poll');
           break;
         case 'time-availability':
           setCurrentRoute('time-availability');
@@ -1371,6 +1382,187 @@ const THEAvailabilityVote = () => {
     );
   }
 
+  // Time Poll List Page
+  if (currentRoute === 'time-poll-list') {
+    // For now, use a simple approach - group time submissions by name/date
+    const timePollsList = [];
+    
+    // Group time submissions by user to create "time polls"
+    Object.entries(timeSubmissions).forEach(([userName, userData]) => {
+      if (userData.timeAvailability) {
+        Object.keys(userData.timeAvailability).forEach(dateKey => {
+          const existingPoll = timePollsList.find(poll => poll.dateKey === dateKey);
+          if (existingPoll) {
+            existingPoll.responses.push({ userName, data: userData.timeAvailability[dateKey] });
+            existingPoll.totalResponses++;
+          } else {
+            const date = new Date(dateKey);
+            timePollsList.push({
+              id: dateKey,
+              title: `Time Availability - ${date.toLocaleDateString()}`,
+              dateKey,
+              date,
+              responses: [{ userName, data: userData.timeAvailability[dateKey] }],
+              totalResponses: 1,
+              isActive: true
+            });
+          }
+        });
+      }
+    });
+
+    // Sort by date (newest first)
+    const sortedTimePolls = timePollsList.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    return (
+      <div className={`min-h-screen p-4 ${isDarkMode ? 'bg-gradient-to-br from-gray-900 to-gray-800' : 'bg-gradient-to-br from-blue-50 to-indigo-100'} relative`}>
+        <div className="absolute top-4 right-4 z-10 flex gap-2">
+          <button
+            onClick={() => setLang(l => l === 'th' ? 'en' : 'th')}
+            className={`px-3 py-1 border rounded text-sm shadow ${isDarkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-white border-gray-300'}`}
+          >
+            {lang === 'th' ? 'EN' : 'TH'}
+          </button>
+          <button
+            onClick={() => setIsDarkMode(!isDarkMode)}
+            className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-yellow-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'}`}
+          >
+            {isDarkMode ? '☀️' : '🌙'}
+          </button>
+        </div>
+
+        <div className="max-w-6xl mx-auto pt-16">
+          <div className={`rounded-xl shadow-lg p-8 ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white'}`}>
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                  {lang === 'th' ? 'การจัดการเวลา' : 'Time Availability Management'}
+                </h1>
+                <p className={`mt-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  {lang === 'th' ? 'จัดการการโหวตเวลาทั้งหมด' : 'Manage all time availability voting sessions'}
+                </p>
+              </div>
+              <button
+                onClick={navigateBack}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                ← {lang === 'th' ? 'แดชบอร์ด' : 'Dashboard'}
+              </button>
+            </div>
+
+            {isLoading ? (
+              <div className="text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <p className="mt-2">{lang === 'th' ? 'กำลังโหลด...' : 'Loading time polls...'}</p>
+              </div>
+            ) : sortedTimePolls.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">🕐</div>
+                <h3 className={`text-xl font-semibold mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  {lang === 'th' ? 'ยังไม่มีการโหวตเวลา' : 'No Time Voting Sessions Yet'}
+                </h3>
+                <p className={`mb-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  {lang === 'th' ? 'เริ่มต้นการโหวตเวลาครั้งแรกของคุณ' : 'Start your first time voting session'}
+                </p>
+                <button
+                  onClick={() => {
+                    navigateToRoute('time-availability', 'time-availability');
+                    setCurrentTimePage('main');
+                  }}
+                  className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold"
+                >
+                  {lang === 'th' ? 'เริ่มโหวตเวลา' : 'Start Time Voting'}
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {sortedTimePolls.map(timePoll => (
+                  <div key={timePoll.id} className={`p-6 rounded-lg border ${isDarkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-200 bg-gray-50'}`}>
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                          {timePoll.title}
+                        </h3>
+                        <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          {timePoll.date.toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className={`px-2 py-1 rounded text-xs ${timePoll.totalResponses > 0 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
+                          {timePoll.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className={`space-y-2 mb-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                      <p className="text-sm">
+                        <strong>{lang === 'th' ? 'ผู้ตอบกลับ:' : 'Responses:'}</strong> {timePoll.totalResponses}
+                      </p>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setCurrentRoute('time-availability');
+                          setCurrentTimePage('view');
+                          updateURL('time-results');
+                        }}
+                        className="flex-1 bg-green-600 text-white py-2 px-3 rounded text-sm hover:bg-green-700 transition-colors"
+                      >
+                        {lang === 'th' ? 'ดูผล' : 'View Results'}
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigateToRoute('time-availability', 'time-availability');
+                          setCurrentTimePage('main');
+                        }}
+                        className="flex-1 bg-blue-600 text-white py-2 px-3 rounded text-sm hover:bg-blue-700 transition-colors"
+                      >
+                        {lang === 'th' ? 'เพิ่มการตอบกลับ' : 'Add Response'}
+                      </button>
+                    </div>
+
+                    {/* Recent Responses */}
+                    <div className="mt-4 pt-4 border-t border-gray-300">
+                      <h4 className={`text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                        {lang === 'th' ? 'การตอบกลับล่าสุด:' : 'Recent Responses:'}
+                      </h4>
+                      <div className="space-y-1">
+                        {timePoll.responses.slice(0, 3).map((response, index) => (
+                          <div key={index} className={`text-xs flex justify-between ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                            <span>{response.userName}</span>
+                            <span>{Object.values(response.data).filter(Boolean).length} slots</span>
+                          </div>
+                        ))}
+                        {timePoll.responses.length > 3 && (
+                          <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                            +{timePoll.responses.length - 3} {lang === 'th' ? 'เพิ่มเติม...' : 'more...'}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="mt-8 flex justify-center">
+              <button
+                onClick={() => {
+                  navigateToRoute('time-availability', 'time-availability');
+                  setCurrentTimePage('main');
+                }}
+                className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold"
+              >
+                + {lang === 'th' ? 'เริ่มโหวตเวลาใหม่' : 'Start New Time Voting'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Time Availability Page - View Mode (Results)
   if (currentRoute === 'time-availability' && currentTimePage === 'view') {
     return (
@@ -2154,8 +2346,7 @@ const THEAvailabilityVote = () => {
                   </p>
                   <button
                     onClick={() => {
-                      navigateToRoute('time-availability', 'time-availability');
-                      setCurrentTimePage('main');
+                      navigateToRoute('time-poll-list', 'time-polls');
                     }}
                     className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold w-full"
                   >
