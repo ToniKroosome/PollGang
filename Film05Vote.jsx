@@ -463,10 +463,38 @@ const THEAvailabilityVote = () => {
         case 'time-availability':
           setCurrentRoute('time-availability');
           setCurrentTimePage('main');
+          // Load time poll from URL if poll ID is provided
+          if (pollIdFromUrl) {
+            setCurrentTimePollId(pollIdFromUrl);
+            // Try to load time poll data
+            const timePollData = localStorage.getItem(pollIdFromUrl);
+            if (timePollData) {
+              try {
+                const timePoll = JSON.parse(timePollData);
+                setSelectedTimeDate(new Date(timePoll.targetDate));
+              } catch (error) {
+                console.error('Error loading time poll from URL:', error);
+              }
+            }
+          }
           break;
         case 'time-results':
           setCurrentRoute('time-availability');
           setCurrentTimePage('view');
+          // Load time poll from URL if poll ID is provided
+          if (pollIdFromUrl) {
+            setCurrentTimePollId(pollIdFromUrl);
+            // Try to load time poll data
+            const timePollData = localStorage.getItem(pollIdFromUrl);
+            if (timePollData) {
+              try {
+                const timePoll = JSON.parse(timePollData);
+                setSelectedTimeDate(new Date(timePoll.targetDate));
+              } catch (error) {
+                console.error('Error loading time poll from URL:', error);
+              }
+            }
+          }
           break;
         case 'availability':
           setCurrentRoute('availability');
@@ -1412,35 +1440,37 @@ const THEAvailabilityVote = () => {
 
   // Time Poll List Page
   if (currentRoute === 'time-poll-list') {
-    // For now, use a simple approach - group time submissions by name/date
-    const timePollsList = [];
-    
-    // Group time submissions by user to create "time polls"
-    Object.entries(timeSubmissions).forEach(([userName, userData]) => {
-      if (userData.timeAvailability) {
-        Object.keys(userData.timeAvailability).forEach(dateKey => {
-          const existingPoll = timePollsList.find(poll => poll.dateKey === dateKey);
-          if (existingPoll) {
-            existingPoll.responses.push({ userName, data: userData.timeAvailability[dateKey] });
-            existingPoll.totalResponses++;
-          } else {
-            const date = new Date(dateKey);
-            timePollsList.push({
-              id: dateKey,
-              title: `Time Availability - ${date.toLocaleDateString()}`,
-              dateKey,
-              date,
-              responses: [{ userName, data: userData.timeAvailability[dateKey] }],
-              totalResponses: 1,
-              isActive: true
-            });
-          }
-        });
+    // Load time polls from localStorage if not already loaded
+    useEffect(() => {
+      const storedTimePolls = localStorage.getItem('film05_time_polls');
+      if (storedTimePolls) {
+        try {
+          setTimePolls(JSON.parse(storedTimePolls));
+        } catch (error) {
+          console.error('Error loading time polls:', error);
+        }
       }
+    }, []);
+
+    // Convert timePolls object to array and sort by date
+    const timePollsList = Object.values(timePolls).map(poll => {
+      // Count responses for this poll
+      const responses = Object.entries(timeSubmissions).filter(([userName, userData]) => {
+        if (userData.selectedDate === poll.targetDate || userData.pollId === poll.id) {
+          return true;
+        }
+        return false;
+      });
+      
+      return {
+        ...poll,
+        responses,
+        totalResponses: responses.length
+      };
     });
 
-    // Sort by date (newest first)
-    const sortedTimePolls = timePollsList.sort((a, b) => new Date(b.date) - new Date(a.date));
+    // Sort by creation date (newest first)
+    const sortedTimePolls = timePollsList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     return (
       <div className={`min-h-screen p-4 ${isDarkMode ? 'bg-gradient-to-br from-gray-900 to-gray-800' : 'bg-gradient-to-br from-blue-50 to-indigo-100'} relative`}>
@@ -1531,9 +1561,11 @@ const THEAvailabilityVote = () => {
                     <div className="flex gap-2">
                       <button
                         onClick={() => {
+                          setCurrentTimePollId(timePoll.id);
+                          setSelectedTimeDate(new Date(timePoll.targetDate));
                           setCurrentRoute('time-availability');
                           setCurrentTimePage('view');
-                          updateURL('time-results');
+                          updateURL('time-results', { poll: timePoll.id });
                         }}
                         className="flex-1 bg-green-600 text-white py-2 px-3 rounded text-sm hover:bg-green-700 transition-colors"
                       >
@@ -1541,12 +1573,28 @@ const THEAvailabilityVote = () => {
                       </button>
                       <button
                         onClick={() => {
-                          navigateToRoute('time-availability', 'time-availability');
+                          setCurrentTimePollId(timePoll.id);
+                          setSelectedTimeDate(new Date(timePoll.targetDate));
+                          navigateToRoute('time-availability', 'time-availability', { poll: timePoll.id });
                           setCurrentTimePage('main');
                         }}
                         className="flex-1 bg-blue-600 text-white py-2 px-3 rounded text-sm hover:bg-blue-700 transition-colors"
                       >
                         {lang === 'th' ? 'เพิ่มการตอบกลับ' : 'Add Response'}
+                      </button>
+                    </div>
+                    
+                    {/* Copy Link Button */}
+                    <div className="mt-2">
+                      <button
+                        onClick={() => {
+                          const shareUrl = `${window.location.origin}/?page=time-availability&poll=${timePoll.id}`;
+                          navigator.clipboard.writeText(shareUrl);
+                          alert(lang === 'th' ? 'คัดลอกลิงก์แล้ว!' : 'Link copied to clipboard!');
+                        }}
+                        className="w-full bg-green-600 text-white py-2 px-3 rounded text-sm hover:bg-green-700 transition-colors"
+                      >
+                        📋 {lang === 'th' ? 'คัดลอกลิงก์โหวต' : 'Copy Voting Link'}
                       </button>
                     </div>
 
@@ -1612,9 +1660,16 @@ const THEAvailabilityVote = () => {
           id: timePollKey
         };
         
-        // Store in timePolls state (or could extend to use Firebase later)
+        // Store in timePolls state and localStorage
         setTimePolls(prev => ({
           ...prev,
+          [timePollKey]: timePollData
+        }));
+        
+        // Save to localStorage for URL sharing
+        localStorage.setItem(timePollKey, JSON.stringify(timePollData));
+        localStorage.setItem('film05_time_polls', JSON.stringify({
+          ...timePolls,
           [timePollKey]: timePollData
         }));
         
@@ -1623,8 +1678,8 @@ const THEAvailabilityVote = () => {
         setCurrentRoute('time-availability');
         setCurrentTimePage('main');
         
-        // Update URL
-        updateURL('time-availability');
+        // Update URL with poll ID
+        updateURL('time-availability', { poll: timePollKey });
         
         // Reset form
         setNewTimePollTitle('');
