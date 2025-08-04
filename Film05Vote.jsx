@@ -101,6 +101,12 @@ const THEAvailabilityVote = () => {
   const t = useT(lang);
   const [THEName, setTHEName] = useState('');
   
+  // Crash Recovery System
+  const [lastSaved, setLastSaved] = useState(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showRecoveryModal, setShowRecoveryModal] = useState(false);
+  const [recoveryData, setRecoveryData] = useState(null);
+  
   // Helper function to update URL
   const updateURL = (page, params = {}) => {
     const url = new URL(window.location);
@@ -117,6 +123,93 @@ const THEAvailabilityVote = () => {
     });
     
     window.history.pushState({}, '', url);
+  };
+
+  // Crash Recovery Functions
+  const saveToRecovery = (data, type) => {
+    try {
+      const recoveryKey = `film05_recovery_${type}`;
+      const recoveryData = {
+        data,
+        timestamp: new Date().toISOString(),
+        type,
+        route: currentRoute,
+        step: currentStep
+      };
+      localStorage.setItem(recoveryKey, JSON.stringify(recoveryData));
+      setLastSaved(new Date());
+      setHasUnsavedChanges(false);
+    } catch (error) {
+      console.error('Error saving recovery data:', error);
+    }
+  };
+
+  const checkForRecovery = () => {
+    try {
+      const availabilityRecovery = localStorage.getItem('film05_recovery_availability');
+      const timeRecovery = localStorage.getItem('film05_recovery_time');
+      
+      if (availabilityRecovery) {
+        const data = JSON.parse(availabilityRecovery);
+        const timeDiff = new Date() - new Date(data.timestamp);
+        // Show recovery if data is less than 24 hours old
+        if (timeDiff < 24 * 60 * 60 * 1000) {
+          setRecoveryData(data);
+          setShowRecoveryModal(true);
+          return;
+        }
+      }
+      
+      if (timeRecovery) {
+        const data = JSON.parse(timeRecovery);
+        const timeDiff = new Date() - new Date(data.timestamp);
+        if (timeDiff < 24 * 60 * 60 * 1000) {
+          setRecoveryData(data);
+          setShowRecoveryModal(true);
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Error checking recovery data:', error);
+    }
+  };
+
+  const recoverData = () => {
+    if (!recoveryData) return;
+    
+    try {
+      if (recoveryData.type === 'availability') {
+        setTHEName(recoveryData.data.name || '');
+        setAvailability(recoveryData.data.availability || {});
+        setSelectedMonth(recoveryData.data.month || 7);
+        setSelectedYear(recoveryData.data.year || 2025);
+        setPreferredRestaurant(recoveryData.data.restaurant || '');
+        setCurrentRoute('availability');
+        setCurrentStep(recoveryData.step || 1);
+      } else if (recoveryData.type === 'time') {
+        setTimeUserName(recoveryData.data.name || '');
+        setTimeAvailability(recoveryData.data.timeAvailability || {});
+        setSelectedTimeDate(new Date(recoveryData.data.selectedDate || new Date()));
+        setCurrentRoute('time-availability');
+      }
+      
+      // Clear recovery data
+      localStorage.removeItem(`film05_recovery_${recoveryData.type}`);
+      setShowRecoveryModal(false);
+      setRecoveryData(null);
+      
+      alert(lang === 'th' ? 'ข้อมูลถูกกู้คืนแล้ว!' : 'Data recovered successfully!');
+    } catch (error) {
+      console.error('Error recovering data:', error);
+    }
+  };
+
+  const clearRecovery = () => {
+    if (recoveryData) {
+      localStorage.removeItem(`film05_recovery_${recoveryData.type}`);
+    }
+    setShowRecoveryModal(false);
+    setRecoveryData(null);
   };
   const [selectedMonth, setSelectedMonth] = useState(7);
   const [selectedYear, setSelectedYear] = useState(2025);
@@ -180,6 +273,54 @@ const THEAvailabilityVote = () => {
       setTimeAvailability({});
     }
   }, [timeUserName, timeSubmissions]);
+
+  // Check for crash recovery on mount
+  useEffect(() => {
+    checkForRecovery();
+  }, []);
+
+  // Auto-save availability data
+  useEffect(() => {
+    if (THEName && Object.keys(availability).length > 0) {
+      const saveData = {
+        name: THEName,
+        availability,
+        month: selectedMonth,
+        year: selectedYear,
+        restaurant: preferredRestaurant
+      };
+      saveToRecovery(saveData, 'availability');
+      setHasUnsavedChanges(true);
+    }
+  }, [THEName, availability, selectedMonth, selectedYear, preferredRestaurant]);
+
+  // Auto-save time availability data
+  useEffect(() => {
+    if (timeUserName && Object.keys(timeAvailability).length > 0) {
+      const saveData = {
+        name: timeUserName,
+        timeAvailability,
+        selectedDate: selectedTimeDate.toISOString()
+      };
+      saveToRecovery(saveData, 'time');
+      setHasUnsavedChanges(true);
+    }
+  }, [timeUserName, timeAvailability, selectedTimeDate]);
+
+  // Warn before leaving with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (hasUnsavedChanges) {
+        const message = lang === 'th' ? 'คุณมีข้อมูลที่ยังไม่ได้บันทึก' : 'You have unsaved changes';
+        e.preventDefault();
+        e.returnValue = message;
+        return message;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges, lang]);
 
   useEffect(() => {
     const handleGlobalMouseUp = () => {
@@ -2197,6 +2338,42 @@ const THEAvailabilityVote = () => {
         )}
       </div>
     </div>
+    );
+  }
+
+  // Crash Recovery Modal
+  if (showRecoveryModal && recoveryData) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className={`rounded-lg p-6 max-w-md w-full mx-4 ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white'}`}>
+          <div className="text-center">
+            <div className="text-4xl mb-4">🔄</div>
+            <h3 className="text-lg font-bold mb-4">
+              {lang === 'th' ? 'พบข้อมูลที่ยังไม่ได้บันทึก' : 'Unsaved Data Found'}
+            </h3>
+            <p className={`mb-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              {lang === 'th' 
+                ? `พบข้อมูลการโหวต${recoveryData.type === 'time' ? 'เวลา' : 'วันที่'}ที่ยังไม่ได้บันทึกจาก ${new Date(recoveryData.timestamp).toLocaleString()} คุณต้องการกู้คืนข้อมูลหรือไม่?`
+                : `Found unsaved ${recoveryData.type === 'time' ? 'time' : 'date'} voting data from ${new Date(recoveryData.timestamp).toLocaleString()}. Would you like to recover it?`
+              }
+            </p>
+            <div className="space-y-2">
+              <button
+                onClick={recoverData}
+                className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 transition-colors"
+              >
+                {lang === 'th' ? '✅ กู้คืนข้อมูล' : '✅ Recover Data'}
+              </button>
+              <button
+                onClick={clearRecovery}
+                className={`w-full py-2 px-4 rounded transition-colors ${isDarkMode ? 'bg-gray-600 hover:bg-gray-700' : 'bg-gray-200 hover:bg-gray-300'}`}
+              >
+                {lang === 'th' ? '❌ ลบข้อมูล' : '❌ Discard Data'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     );
   }
 

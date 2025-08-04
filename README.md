@@ -2,6 +2,17 @@
 
 A bilingual (Thai/English) web application for Film 05 group members to vote on their availability for meetings and events. The app features a calendar-based interface for marking availability, admin functionality for managing polls, and Firebase integration for real-time data synchronization.
 
+## 🚀 Live Demo
+
+**🌐 Live App**: https://pollgang.onrender.com/
+
+**📋 Quick Access URLs**:
+- Homepage: https://pollgang.onrender.com/
+- Vote on Dates: https://pollgang.onrender.com/?page=availability  
+- Vote on Times: https://pollgang.onrender.com/?page=time-availability
+- View Results: https://pollgang.onrender.com/?page=results
+- Admin Panel: https://pollgang.onrender.com/?page=admin
+
 ## Features
 
 ### Core Functionality
@@ -26,6 +37,13 @@ A bilingual (Thai/English) web application for Film 05 group members to vote on 
 - **Mobile Responsive**: Touch-friendly interface with drag-to-select on mobile devices
 - **Shareable Poll Links**: Direct URLs for specific polls
 - **Copy Poll URLs**: Easy sharing with one-click copy functionality
+
+### Crash Recovery System
+- **Auto-Save**: Automatically saves voting progress to prevent data loss
+- **Recovery Detection**: Detects unsaved data when app is reopened
+- **Smart Recovery**: Recovers partial votes, names, and selections up to 24 hours old
+- **Warning System**: Warns users before leaving with unsaved changes
+- **Bilingual Recovery**: Recovery messages in both Thai and English
 
 ## Technology Stack
 
@@ -72,13 +90,13 @@ Each page now has its own unique URL for easy sharing and bookmarking:
 
 ### Example URLs:
 ```
-https://yoursite.com/                                           # Homepage
-https://yoursite.com/?page=availability                         # Vote on dates
-https://yoursite.com/?page=time-availability                    # Vote on times
-https://yoursite.com/?page=results                              # View all results
-https://yoursite.com/?page=admin                                # Admin dashboard
-https://yoursite.com/?page=availability&poll=poll_1699123456789 # Specific poll voting
-https://yoursite.com/?page=results&poll=poll_1699123456789      # Specific poll results
+https://pollgang.onrender.com/                                           # Homepage
+https://pollgang.onrender.com/?page=availability                         # Vote on dates
+https://pollgang.onrender.com/?page=time-availability                    # Vote on times
+https://pollgang.onrender.com/?page=results                              # View all results
+https://pollgang.onrender.com/?page=admin                                # Admin dashboard
+https://pollgang.onrender.com/?page=availability&poll=poll_1699123456789 # Specific poll voting
+https://pollgang.onrender.com/?page=results&poll=poll_1699123456789      # Specific poll results
 ```
 
 ## Usage
@@ -129,6 +147,9 @@ The app uses Firebase Firestore for data storage. Collections:
 
 ## Build and Deployment
 
+### Current Deployment
+The app is currently deployed at: **https://pollgang.onrender.com/**
+
 ### Build for Production
 ```bash
 npm run build
@@ -136,8 +157,30 @@ npm run build
 
 This creates optimized files in the `dist/` directory.
 
-### Deploy
-The app is configured to deploy to `https://localrycommu.work/PollGang`
+### Deployment Platforms
+
+#### Render (Current)
+- **URL**: https://pollgang.onrender.com/
+- **Auto-deploy**: Enabled from GitHub main branch
+- **Build Command**: `npm run build`
+- **Publish Directory**: `dist`
+
+#### Vercel (Alternative)
+```bash
+npm install -g vercel
+vercel --prod
+```
+
+#### Netlify (Alternative)
+- Connect GitHub repository
+- Build command: `npm run build`
+- Publish directory: `dist`
+
+### Required Configuration Files
+- `vercel.json` - Vercel deployment settings
+- `public/_redirects` - SPA routing for Netlify/Render
+- `public/.htaccess` - Apache server configuration
+- `webpack.config.js` - Build configuration with correct publicPath
 
 ## Local Storage
 
