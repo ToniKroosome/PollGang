@@ -88,6 +88,125 @@ export const film05Service = {
       });
       callback(submissions);
     });
+  },
+
+  // Poll management functions
+  async createPoll(pollData) {
+    try {
+      const pollId = `poll_${pollData.month}_${pollData.year}`;
+      const docRef = doc(db, 'film05_polls', pollId);
+      await setDoc(docRef, {
+        ...pollData,
+        id: pollId,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        isActive: true
+      });
+      console.log('✅ Film05 poll created:', pollId);
+      return { success: true, pollId };
+    } catch (error) {
+      console.error('❌ Error creating Film05 poll:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  async loadPolls() {
+    try {
+      const pollsRef = collection(db, 'film05_polls');
+      const snapshot = await getDocs(pollsRef);
+      const polls = {};
+      
+      snapshot.forEach((doc) => {
+        polls[doc.id] = doc.data();
+      });
+      
+      console.log('✅ Film05 polls loaded:', Object.keys(polls).length);
+      return { success: true, data: polls };
+    } catch (error) {
+      console.error('❌ Error loading Film05 polls:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  subscribeToPolls(callback) {
+    const pollsRef = collection(db, 'film05_polls');
+    return onSnapshot(pollsRef, (snapshot) => {
+      const polls = {};
+      snapshot.forEach((doc) => {
+        polls[doc.id] = doc.data();
+      });
+      callback(polls);
+    });
+  },
+
+  async deletePoll(pollId) {
+    try {
+      const docRef = doc(db, 'film05_polls', pollId);
+      await deleteDoc(docRef);
+      console.log('✅ Film05 poll deleted:', pollId);
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Error deleting Film05 poll:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Time availability functions
+  async saveTimeAvailability(timeData) {
+    try {
+      const docRef = doc(db, 'film05_time_availability', timeData.name || 'anonymous');
+      await setDoc(docRef, {
+        ...timeData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      console.log('✅ Film05 time availability saved:', timeData.name);
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Error saving Film05 time availability:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  async loadTimeAvailability() {
+    try {
+      const timeRef = collection(db, 'film05_time_availability');
+      const snapshot = await getDocs(timeRef);
+      const timeData = {};
+      
+      snapshot.forEach((doc) => {
+        timeData[doc.id] = doc.data();
+      });
+      
+      console.log('✅ Film05 time availability loaded:', Object.keys(timeData).length);
+      return { success: true, data: timeData };
+    } catch (error) {
+      console.error('❌ Error loading Film05 time availability:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  subscribeToTimeAvailability(callback) {
+    const timeRef = collection(db, 'film05_time_availability');
+    return onSnapshot(timeRef, (snapshot) => {
+      const timeData = {};
+      snapshot.forEach((doc) => {
+        timeData[doc.id] = doc.data();
+      });
+      callback(timeData);
+    });
+  },
+
+  async deleteTimeAvailability(userName) {
+    try {
+      const docRef = doc(db, 'film05_time_availability', userName);
+      await deleteDoc(docRef);
+      console.log('✅ Film05 time availability deleted:', userName);
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Error deleting Film05 time availability:', error);
+      return { success: false, error: error.message };
+    }
   }
 };
 

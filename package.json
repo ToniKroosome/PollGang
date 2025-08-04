@@ -2,7 +2,7 @@
   "name": "film05-vote",
   "version": "1.0.0",
   "description": "Film 05 Group Availability Voting App - Thai/English bilingual scheduler",
-  "homepage": "https://localrycommu.work/Film05EatAug2025",
+  "homepage": "https://localrycommu.work/PollGang",
   "main": "Film05Vote.jsx",
   "scripts": {
     "build": "webpack --mode production",
