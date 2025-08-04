@@ -95,6 +95,7 @@ const useT = (lang) => (key, params = {}) => {
 const THEAvailabilityVote = () => {
   // Route management
   const [currentRoute, setCurrentRoute] = useState('home'); // 'home', 'admin-main', 'poll-list', 'create-poll', 'availability', or 'time-availability'
+  const [navigationHistory, setNavigationHistory] = useState(['home']); // Track navigation history for proper back navigation
   const [currentPage, setCurrentPage] = useState('main');
   const [currentStep, setCurrentStep] = useState(1);
   const [lang, setLang] = useState('th');
@@ -123,6 +124,47 @@ const THEAvailabilityVote = () => {
     });
     
     window.history.pushState({}, '', url);
+  };
+
+  // Helper function to navigate with history tracking
+  const navigateToRoute = (newRoute, urlPage = null, params = {}) => {
+    setNavigationHistory(prev => [...prev, currentRoute]);
+    setCurrentRoute(newRoute);
+    if (urlPage) {
+      updateURL(urlPage, params);
+    }
+  };
+
+  // Helper function to go back to previous route
+  const navigateBack = () => {
+    if (navigationHistory.length > 0) {
+      const previousRoute = navigationHistory[navigationHistory.length - 1];
+      setNavigationHistory(prev => prev.slice(0, -1));
+      setCurrentRoute(previousRoute);
+      
+      // Update URL based on the route we're going back to
+      switch(previousRoute) {
+        case 'home':
+          updateURL('home');
+          break;
+        case 'admin-main':
+          updateURL('admin');
+          break;
+        case 'availability':
+          updateURL('availability');
+          break;
+        case 'time-availability':
+          updateURL('time-availability');
+          break;
+        default:
+          updateURL('home');
+          break;
+      }
+    } else {
+      // Fallback to home if no history
+      setCurrentRoute('home');
+      updateURL('home');
+    }
   };
 
   // Crash Recovery Functions
@@ -745,7 +787,7 @@ const THEAvailabilityVote = () => {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               {/* Vote on Date Availability */}
               <div className={`p-6 rounded-lg border-2 border-dashed hover:border-solid transition-all ${isDarkMode ? 'border-gray-600 bg-gray-700 hover:bg-gray-600' : 'border-gray-300 bg-gray-50 hover:bg-gray-100'}`}>
                 <div className="text-4xl mb-4">📅</div>
@@ -757,10 +799,9 @@ const THEAvailabilityVote = () => {
                 </p>
                 <button
                   onClick={() => {
-                    setCurrentRoute('availability');
+                    navigateToRoute('availability', 'availability');
                     setCurrentPage('main');
                     setCurrentStep(1);
-                    updateURL('availability');
                   }}
                   className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold w-full"
                 >
@@ -779,33 +820,12 @@ const THEAvailabilityVote = () => {
                 </p>
                 <button
                   onClick={() => {
-                    setCurrentRoute('time-availability');
-                    updateURL('time-availability');
+                    navigateToRoute('time-availability', 'time-availability');
+                    setCurrentTimePage('main');
                   }}
                   className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold w-full"
                 >
                   {lang === 'th' ? 'เลือกเวลา' : 'Select Times'}
-                </button>
-              </div>
-
-              {/* View Results */}
-              <div className={`p-6 rounded-lg border-2 border-dashed hover:border-solid transition-all ${isDarkMode ? 'border-gray-600 bg-gray-700 hover:bg-gray-600' : 'border-gray-300 bg-gray-50 hover:bg-gray-100'}`}>
-                <div className="text-4xl mb-4">👥</div>
-                <h3 className={`text-xl font-semibold mb-3 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                  {lang === 'th' ? 'ดูผลโหวต' : 'View Results'}
-                </h3>
-                <p className={`mb-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                  {lang === 'th' ? 'ดูผลการโหวตของทุกคนในกลุ่ม' : 'See everyone\'s voting results'}
-                </p>
-                <button
-                  onClick={() => {
-                    setCurrentRoute('availability');
-                    setCurrentPage('view');
-                    updateURL('results');
-                  }}
-                  className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors font-semibold w-full"
-                >
-                  {lang === 'th' ? 'ดูผล' : 'View Results'}
                 </button>
               </div>
             </div>
@@ -814,8 +834,7 @@ const THEAvailabilityVote = () => {
             <div className="pt-6 border-t border-gray-300">
               <button
                 onClick={() => {
-                  setCurrentRoute('admin-main');
-                  updateURL('admin');
+                  navigateToRoute('admin-main', 'admin');
                 }}
                 className={`text-sm px-4 py-2 rounded transition-colors ${isDarkMode ? 'text-gray-400 hover:text-white hover:bg-gray-700' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
               >
@@ -1558,7 +1577,78 @@ const THEAvailabilityVote = () => {
   }
 
   // Time Availability Page - Main Mode (Voting)
-  if (currentRoute === 'time-availability') {
+  if (currentRoute === 'time-availability' && currentTimePage === 'main') {
+    return (
+      <div className={`min-h-screen p-4 ${isDarkMode ? 'bg-gradient-to-br from-gray-900 to-gray-800' : 'bg-gradient-to-br from-blue-50 to-indigo-100'} relative`}>
+        <div className="absolute top-4 right-4 z-10">
+          <button
+            onClick={() => setLang(l => l === 'th' ? 'en' : 'th')}
+            className={`px-3 py-1 border rounded text-sm shadow ${isDarkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-white border-gray-300'}`}
+          >
+            {lang === 'th' ? 'EN' : 'TH'}
+          </button>
+        </div>
+        
+        <div className="flex flex-col items-center justify-center min-h-screen">
+          <div className={`rounded-xl shadow-lg p-8 max-w-md w-full ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white'}`}>
+            <div className="flex justify-between items-center mb-8">
+              <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                {lang === 'th' ? 'เลือกเวลาว่าง' : 'Time Availability'}
+              </h1>
+              <button
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-yellow-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'}`}
+              >
+                {isDarkMode ? '☀️' : '🌙'}
+              </button>
+            </div>
+            
+            <div className="mb-6">
+              <button
+                onClick={() => setCurrentTimePage('view')}
+                className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold"
+              >
+                👥 {lang === 'th' ? 'ดูตารางเวลาของทุกคน' : 'See Everyone\'s Time Availability'}
+              </button>
+            </div>
+            
+            <div className="mb-6">
+              <button
+                onClick={navigateBack}
+                className="w-full bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm"
+              >
+                ← {lang === 'th' ? 'กลับ' : 'Back'}
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                {lang === 'th' ? 'ชื่อของคุณ *' : 'Your Name *'}
+              </label>
+              <input
+                type="text"
+                value={timeUserName}
+                onChange={(e) => setTimeUserName(e.target.value)}
+                placeholder={lang === 'th' ? 'กรอกชื่อของคุณ' : 'Enter your name'}
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'border-gray-300 bg-white'}`}
+                onKeyPress={(e) => e.key === 'Enter' && timeUserName.trim() && setCurrentTimePage('select')}
+              />
+              <button
+                onClick={() => setCurrentTimePage('select')}
+                disabled={!timeUserName.trim()}
+                className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                {lang === 'th' ? 'ถัดไป' : 'Next'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Time Availability Page - Time Selection Mode
+  if (currentRoute === 'time-availability' && currentTimePage === 'select') {
     const hours = Array.from({ length: 24 }, (_, i) => i);
     const dateKey = `${selectedTimeDate.getFullYear()}-${selectedTimeDate.getMonth() + 1}-${selectedTimeDate.getDate()}`;
     const currentDateAvailability = timeAvailability[dateKey] || {};
@@ -1592,7 +1682,7 @@ const THEAvailabilityVote = () => {
                 </p>
               </div>
               <button
-                onClick={() => setCurrentRoute('admin-main')}
+                onClick={navigateBack}
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
               >
                 ← {lang === 'th' ? 'กลับ' : 'Back'}
@@ -2006,8 +2096,7 @@ const THEAvailabilityVote = () => {
                   </p>
                   <button
                     onClick={() => {
-                      setCurrentRoute('poll-list');
-                      updateURL('polls');
+                      navigateToRoute('poll-list', 'polls');
                     }}
                     className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors font-semibold w-full"
                   >
@@ -2026,8 +2115,8 @@ const THEAvailabilityVote = () => {
                   </p>
                   <button
                     onClick={() => {
-                      setCurrentRoute('time-availability');
-                      updateURL('time-availability');
+                      navigateToRoute('time-availability', 'time-availability');
+                      setCurrentTimePage('main');
                     }}
                     className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold w-full"
                   >
@@ -2143,10 +2232,10 @@ const THEAvailabilityVote = () => {
                   {isDarkMode ? '☀️' : '🌙'}
                 </button>
                 <button
-                  onClick={() => setCurrentRoute('admin-main')}
+                  onClick={navigateBack}
                   className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  ← Dashboard
+                  ← {lang === 'th' ? 'กลับ' : 'Back'}
                 </button>
               </div>
             </div>
@@ -2407,10 +2496,10 @@ const THEAvailabilityVote = () => {
               
               <div className="mb-6">
                 <button
-                  onClick={() => setCurrentRoute('admin-main')}
+                  onClick={navigateBack}
                   className="w-full bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm"
                 >
-                  ← Back to Dashboard
+                  ← {lang === 'th' ? 'กลับ' : 'Back'}
                 </button>
               </div>
               
