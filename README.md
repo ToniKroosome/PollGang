@@ -62,8 +62,8 @@ A bilingual (Thai/English) web application for Film 05 group members to vote on 
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/ToniKroosome/LocalReviewApp-Draft-3.git
-cd "40 Film 05 Vote"
+git clone https://github.com/ToniKroosome/PollGang.git
+cd PollGang
 ```
 
 2. Install dependencies:
