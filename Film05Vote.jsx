@@ -1549,12 +1549,171 @@ const THEAvailabilityVote = () => {
             <div className="mt-8 flex justify-center">
               <button
                 onClick={() => {
-                  navigateToRoute('time-availability', 'time-availability');
-                  setCurrentTimePage('main');
+                  navigateToRoute('create-time-poll', 'create-time-poll');
                 }}
                 className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold"
               >
-                + {lang === 'th' ? 'เริ่มโหวตเวลาใหม่' : 'Start New Time Voting'}
+                + {lang === 'th' ? 'สร้างโพลเวลาใหม่' : 'Create New Time Poll'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Create Time Poll Page
+  if (currentRoute === 'create-time-poll') {
+    const handleCreateTimePoll = async () => {
+      if (!newTimePollTitle.trim()) {
+        alert(lang === 'th' ? 'กรุณาใส่ชื่อโพลเวลา' : 'Please enter a time poll title');
+        return;
+      }
+      
+      setIsSaving(true);
+      
+      try {
+        // For time polls, we'll use a simpler approach - just set up the context and go to time voting
+        const timestamp = Date.now();
+        const timePollKey = `time_poll_${timestamp}`;
+        const timePollData = {
+          title: newTimePollTitle.trim(),
+          targetDate: selectedTimeDate.toISOString(),
+          createdAt: new Date().toISOString(),
+          createdBy: 'admin',
+          id: timePollKey
+        };
+        
+        // Store in timePolls state (or could extend to use Firebase later)
+        setTimePolls(prev => ({
+          ...prev,
+          [timePollKey]: timePollData
+        }));
+        
+        // Set current context and navigate to time voting interface
+        setCurrentTimePollId(timePollKey);
+        setCurrentRoute('time-availability');
+        setCurrentTimePage('main');
+        
+        // Update URL
+        updateURL('time-availability');
+        
+        // Reset form
+        setNewTimePollTitle('');
+        setSelectedTimeDate(new Date());
+        
+      } catch (error) {
+        alert('Failed to create time poll: ' + error.message);
+      }
+      
+      setIsSaving(false);
+    };
+
+    return (
+      <div className={`min-h-screen p-4 ${isDarkMode ? 'bg-gradient-to-br from-gray-900 to-gray-800' : 'bg-gradient-to-br from-blue-50 to-indigo-100'} relative`}>
+        <div className="absolute top-4 right-4 z-10 flex gap-2">
+          <button
+            onClick={() => setLang(l => l === 'th' ? 'en' : 'th')}
+            className={`px-3 py-1 border rounded text-sm shadow ${isDarkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-white border-gray-300'}`}
+          >
+            {lang === 'th' ? 'EN' : 'TH'}
+          </button>
+          <button
+            onClick={() => setIsDarkMode(!isDarkMode)}
+            className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-yellow-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'}`}
+          >
+            {isDarkMode ? '☀️' : '🌙'}
+          </button>
+        </div>
+
+        <div className="max-w-2xl mx-auto pt-16">
+          <div className={`rounded-xl shadow-lg p-8 ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white'}`}>
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                  {lang === 'th' ? 'สร้างโพลเวลาใหม่' : 'Create New Time Poll'}
+                </h1>
+                <p className={`mt-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  {lang === 'th' ? 'ตั้งค่าการโหวตเวลาใหม่' : 'Set up a new time availability voting session'}
+                </p>
+              </div>
+              <button
+                onClick={navigateBack}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                ← {lang === 'th' ? 'กลับ' : 'Back'}
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  {lang === 'th' ? 'ชื่อโพลเวลา *' : 'Time Poll Title *'}
+                </label>
+                <input
+                  type="text"
+                  value={newTimePollTitle}
+                  onChange={(e) => setNewTimePollTitle(e.target.value)}
+                  placeholder={lang === 'th' ? 'เช่น "เวลาเลี้ยงเอกฟิล์ม วันที่ 15 ส.ค. 2025"' : 'e.g. "Film 05 Dinner Time - Aug 15, 2025"'}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'border-gray-300 bg-white'}`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  {lang === 'th' ? 'วันที่สำหรับโหวตเวลา *' : 'Target Date for Time Voting *'}
+                </label>
+                <input
+                  type="date"
+                  value={selectedTimeDate.toISOString().split('T')[0]}
+                  onChange={(e) => setSelectedTimeDate(new Date(e.target.value))}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300 bg-white'}`}
+                />
+              </div>
+
+              {/* Preview */}
+              <div className={`p-4 rounded-lg border ${isDarkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-200 bg-gray-50'}`}>
+                <h3 className={`font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                  {lang === 'th' ? 'ตัวอย่าง' : 'Preview'}
+                </h3>
+                <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  <strong>{lang === 'th' ? 'ชื่อ:' : 'Title:'}</strong> {newTimePollTitle || (lang === 'th' ? 'โพลเวลาใหม่' : 'New Time Poll')}
+                </p>
+                <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  <strong>{lang === 'th' ? 'วันที่:' : 'Date:'}</strong> {selectedTimeDate.toLocaleDateString()}
+                </p>
+                <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  <strong>URL:</strong> /time-availability
+                </p>
+              </div>
+
+              {/* How it works */}
+              <div className={`p-4 rounded-lg border ${isDarkMode ? 'border-blue-600 bg-blue-900/20' : 'border-blue-200 bg-blue-50'}`}>
+                <h3 className={`font-semibold mb-2 flex items-center ${isDarkMode ? 'text-blue-300' : 'text-blue-800'}`}>
+                  📋 {lang === 'th' ? 'วิธีการทำงาน:' : 'How it works:'}
+                </h3>
+                <ul className={`text-sm space-y-1 ${isDarkMode ? 'text-blue-200' : 'text-blue-700'}`}>
+                  <li>• {lang === 'th' ? `โพลจะถูกสร้างสำหรับวันที่ ${selectedTimeDate.toLocaleDateString()}` : `Time poll will be created for ${selectedTimeDate.toLocaleDateString()}`}</li>
+                  <li>• {lang === 'th' ? 'ผู้ใช้สามารถโหวตช่วงเวลาที่สะดวกในวันนั้น' : 'Users can vote on their available hours for that day'}</li>
+                  <li>• {lang === 'th' ? 'ผลจะแสดงในแดชบอร์ดแอดมิน' : 'Results will be visible in the admin dashboard'}</li>
+                  <li>• {lang === 'th' ? 'คุณสามารถแชร์ลิงก์โหวตกับผู้เข้าร่วม' : 'You can share the voting link with participants'}</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="flex justify-between mt-8">
+              <button
+                onClick={() => navigateBack()}
+                className={`px-6 py-3 border rounded-lg transition-colors ${isDarkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}`}
+              >
+                {lang === 'th' ? 'ยกเลิก' : 'Cancel'}
+              </button>
+              <button
+                onClick={handleCreateTimePoll}
+                disabled={!newTimePollTitle.trim() || isSaving}
+                className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-semibold"
+              >
+                {isSaving ? (lang === 'th' ? 'กำลังสร้างโพล...' : 'Creating Poll...') : (lang === 'th' ? 'สร้างโพลและเริ่มโหวต' : 'Create Poll & Start Voting')}
               </button>
             </div>
           </div>

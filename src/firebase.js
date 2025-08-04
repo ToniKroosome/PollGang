@@ -214,6 +214,67 @@ export const film05Service = {
       console.error('❌ Error deleting Film05 time availability:', error);
       return { success: false, error: error.message };
     }
+  },
+
+  // Time poll management functions
+  async createTimePoll(timePollData) {
+    try {
+      const timePollId = `time_poll_${timePollData.targetDate.replace(/-/g, '_')}_${Date.now()}`;
+      const docRef = doc(db, 'film05_time_polls', timePollId);
+      await setDoc(docRef, {
+        ...timePollData,
+        id: timePollId,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        isActive: true
+      });
+      console.log('✅ Film05 time poll created:', timePollId);
+      return { success: true, timePollId };
+    } catch (error) {
+      console.error('❌ Error creating Film05 time poll:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  async loadTimePolls() {
+    try {
+      const timePollsRef = collection(db, 'film05_time_polls');
+      const snapshot = await getDocs(timePollsRef);
+      const timePolls = {};
+      
+      snapshot.forEach((doc) => {
+        timePolls[doc.id] = doc.data();
+      });
+      
+      console.log('✅ Film05 time polls loaded:', Object.keys(timePolls).length);
+      return { success: true, data: timePolls };
+    } catch (error) {
+      console.error('❌ Error loading Film05 time polls:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  subscribeToTimePolls(callback) {
+    const timePollsRef = collection(db, 'film05_time_polls');
+    return onSnapshot(timePollsRef, (snapshot) => {
+      const timePolls = {};
+      snapshot.forEach((doc) => {
+        timePolls[doc.id] = doc.data();
+      });
+      callback(timePolls);
+    });
+  },
+
+  async deleteTimePoll(timePollId) {
+    try {
+      const docRef = doc(db, 'film05_time_polls', timePollId);
+      await deleteDoc(docRef);
+      console.log('✅ Film05 time poll deleted:', timePollId);
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Error deleting Film05 time poll:', error);
+      return { success: false, error: error.message };
+    }
   }
 };
 
