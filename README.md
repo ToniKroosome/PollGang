@@ -10,8 +10,7 @@ A bilingual (Thai/English) web application for Film 05 group members to vote on 
 - Homepage: https://pollgang.onrender.com/
 - Vote on Dates: https://pollgang.onrender.com/?page=availability  
 - Vote on Times: https://pollgang.onrender.com/?page=time-availability
-- View Date Results: https://pollgang.onrender.com/?page=results
-- View Time Results: https://pollgang.onrender.com/?page=time-results
+- View Results: https://pollgang.onrender.com/?page=results
 - Admin Panel: https://pollgang.onrender.com/?page=admin
 
 ## Features
@@ -82,8 +81,7 @@ Each page now has its own unique URL for easy sharing and bookmarking:
 - **Homepage**: `/` (default) or `?page=home`
 - **Vote Date Availability**: `?page=availability`
 - **Vote Time Availability**: `?page=time-availability`
-- **View Date Results**: `?page=results`
-- **View Time Results**: `?page=time-results`
+- **View Results**: `?page=results`
 - **Admin Dashboard**: `?page=admin`
 - **All Polls**: `?page=polls`
 - **Create New Poll**: `?page=create-poll`
@@ -95,8 +93,7 @@ Each page now has its own unique URL for easy sharing and bookmarking:
 https://pollgang.onrender.com/                                           # Homepage
 https://pollgang.onrender.com/?page=availability                         # Vote on dates
 https://pollgang.onrender.com/?page=time-availability                    # Vote on times
-https://pollgang.onrender.com/?page=results                              # View date results
-https://pollgang.onrender.com/?page=time-results                         # View time results
+https://pollgang.onrender.com/?page=results                              # View all results
 https://pollgang.onrender.com/?page=admin                                # Admin dashboard
 https://pollgang.onrender.com/?page=availability&poll=poll_1699123456789 # Specific poll voting
 https://pollgang.onrender.com/?page=results&poll=poll_1699123456789      # Specific poll results

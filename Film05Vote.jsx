@@ -252,6 +252,7 @@ const THEAvailabilityVote = () => {
   const [selectedTimeDate, setSelectedTimeDate] = useState(new Date());
   const [timeSubmissions, setTimeSubmissions] = useState({});
   const [timeUserName, setTimeUserName] = useState('');
+  const [currentTimePage, setCurrentTimePage] = useState('main');
 
   useEffect(() => {
     if (THEName && savedData[THEName]) {
@@ -742,7 +743,7 @@ const THEAvailabilityVote = () => {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {/* Vote on Date Availability */}
               <div className={`p-6 rounded-lg border-2 border-dashed hover:border-solid transition-all ${isDarkMode ? 'border-gray-600 bg-gray-700 hover:bg-gray-600' : 'border-gray-300 bg-gray-50 hover:bg-gray-100'}`}>
                 <div className="text-4xl mb-4">📅</div>
@@ -785,14 +786,14 @@ const THEAvailabilityVote = () => {
                 </button>
               </div>
 
-              {/* View Date Results */}
+              {/* View Results */}
               <div className={`p-6 rounded-lg border-2 border-dashed hover:border-solid transition-all ${isDarkMode ? 'border-gray-600 bg-gray-700 hover:bg-gray-600' : 'border-gray-300 bg-gray-50 hover:bg-gray-100'}`}>
-                <div className="text-4xl mb-4">📊</div>
+                <div className="text-4xl mb-4">👥</div>
                 <h3 className={`text-xl font-semibold mb-3 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                  {lang === 'th' ? 'ดูผลโหวตวันที่' : 'View Date Results'}
+                  {lang === 'th' ? 'ดูผลโหวต' : 'View Results'}
                 </h3>
                 <p className={`mb-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                  {lang === 'th' ? 'ดูผลการโหวตวันที่ของทุกคน' : 'See everyone\'s date availability votes'}
+                  {lang === 'th' ? 'ดูผลการโหวตของทุกคนในกลุ่ม' : 'See everyone\'s voting results'}
                 </p>
                 <button
                   onClick={() => {
@@ -802,27 +803,7 @@ const THEAvailabilityVote = () => {
                   }}
                   className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors font-semibold w-full"
                 >
-                  {lang === 'th' ? 'ดูผลวันที่' : 'View Date Results'}
-                </button>
-              </div>
-
-              {/* View Time Results */}
-              <div className={`p-6 rounded-lg border-2 border-dashed hover:border-solid transition-all ${isDarkMode ? 'border-gray-600 bg-gray-700 hover:bg-gray-600' : 'border-gray-300 bg-gray-50 hover:bg-gray-100'}`}>
-                <div className="text-4xl mb-4">⏰</div>
-                <h3 className={`text-xl font-semibold mb-3 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                  {lang === 'th' ? 'ดูผลโหวตเวลา' : 'View Time Results'}
-                </h3>
-                <p className={`mb-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                  {lang === 'th' ? 'ดูผลการโหวตเวลาของทุกคน' : 'See everyone\'s time availability votes'}
-                </p>
-                <button
-                  onClick={() => {
-                    setCurrentRoute('time-results');
-                    updateURL('time-results');
-                  }}
-                  className="bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition-colors font-semibold w-full"
-                >
-                  {lang === 'th' ? 'ดูผลเวลา' : 'View Time Results'}
+                  {lang === 'th' ? 'ดูผล' : 'View Results'}
                 </button>
               </div>
             </div>
@@ -1359,7 +1340,221 @@ const THEAvailabilityVote = () => {
     );
   }
 
-  // Time Availability Page
+  // Time Availability Page - View Mode (Results)
+  if (currentRoute === 'time-availability' && currentTimePage === 'view') {
+    return (
+      <div className={`min-h-screen p-4 ${isDarkMode ? 'bg-gradient-to-br from-gray-900 to-gray-800' : 'bg-gradient-to-br from-blue-50 to-indigo-100'} relative`}>
+        <div className="absolute top-4 right-4 z-10 flex gap-2">
+          <button
+            onClick={() => setLang(l => l === 'th' ? 'en' : 'th')}
+            className={`px-3 py-1 border rounded text-sm shadow ${isDarkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-white border-gray-300'}`}
+          >
+            {lang === 'th' ? 'EN' : 'TH'}
+          </button>
+          <button
+            onClick={() => setIsDarkMode(!isDarkMode)}
+            className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-yellow-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'}`}
+          >
+            {isDarkMode ? '☀️' : '🌙'}
+          </button>
+        </div>
+
+        <div className="max-w-7xl mx-auto pt-16">
+          <div className={`rounded-xl shadow-lg p-6 ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white'}`}>
+            
+            <div className="flex justify-between items-center mb-6">
+              <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                {lang === 'th' ? 'ตารางเวลาว่างของทุกคน' : 'Everyone\'s Time Availability'}
+              </h1>
+              <div className="flex gap-3 items-center">
+                {!isAdmin && (
+                  <button
+                    onClick={() => setShowAdminLogin(true)}
+                    className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors"
+                  >
+                    Admin
+                  </button>
+                )}
+                {isAdmin && (
+                  <span className="bg-green-600 text-white px-3 py-1 rounded text-sm">
+                    👨‍💼 Admin Mode
+                  </span>
+                )}
+                <button
+                  onClick={() => {
+                    setCurrentTimePage('main');
+                  }}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  ← {lang === 'th' ? 'กลับไปโหวต' : 'Back to Voting'}
+                </button>
+                <button
+                  onClick={() => {
+                    setCurrentRoute('home');
+                    updateURL('home');
+                  }}
+                  className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  🏠 {lang === 'th' ? 'หน้าแรก' : 'Home'}
+                </button>
+              </div>
+            </div>
+
+            {isLoading ? (
+              <div className="text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <p className="mt-2">{lang === 'th' ? 'กำลังโหลด...' : 'Loading time availability...'}</p>
+              </div>
+            ) : Object.keys(timeSubmissions).length === 0 ? (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">🕐</div>
+                <h3 className={`text-xl font-semibold mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  {lang === 'th' ? 'ยังไม่มีการโหวตเวลา' : 'No Time Votes Yet'}
+                </h3>
+                <p className={`mb-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  {lang === 'th' ? 'ยังไม่มีใครโหวตเวลาที่สะดวก' : 'No one has voted on time availability yet'}
+                </p>
+                <button
+                  onClick={() => {
+                    setCurrentTimePage('main');
+                  }}
+                  className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold"
+                >
+                  {lang === 'th' ? 'เริ่มโหวตเวลา' : 'Start Time Voting'}
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* Summary Stats */}
+                <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                  <div className="text-center">
+                    <div className={`text-2xl font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                      {Object.keys(timeSubmissions).length}
+                    </div>
+                    <div className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                      {lang === 'th' ? 'ผู้โหวต' : 'Voters'}
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className={`text-2xl font-bold ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>
+                      {Object.values(timeSubmissions).reduce((total, user) => 
+                        total + Object.keys(user.timeAvailability || {}).length, 0
+                      )}
+                    </div>
+                    <div className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                      {lang === 'th' ? 'วันที่มีข้อมูล' : 'Days with Data'}
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className={`text-2xl font-bold ${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>
+                      {Object.values(timeSubmissions).reduce((total, user) => {
+                        return total + Object.values(user.timeAvailability || {}).reduce((dayTotal, dayHours) => 
+                          dayTotal + Object.values(dayHours).filter(Boolean).length, 0
+                        );
+                      }, 0)}
+                    </div>
+                    <div className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                      {lang === 'th' ? 'ช่วงเวลารวม' : 'Total Time Slots'}
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className={`text-2xl font-bold ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`}>
+                      {Math.round(
+                        Object.values(timeSubmissions).reduce((total, user) => {
+                          return total + Object.values(user.timeAvailability || {}).reduce((dayTotal, dayHours) => 
+                            dayTotal + Object.values(dayHours).filter(Boolean).length, 0
+                          );
+                        }, 0) / Math.max(Object.keys(timeSubmissions).length, 1)
+                      )}
+                    </div>
+                    <div className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                      {lang === 'th' ? 'เฉลี่ย/คน' : 'Avg per Person'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Time Availability Table */}
+                <div className="space-y-4">
+                  {Object.entries(timeSubmissions).map(([userName, userData]) => {
+                    const timeAvailability = userData.timeAvailability || {};
+                    
+                    return (
+                      <div key={userName} className={`rounded-lg border ${isDarkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-200 bg-gray-50'}`}>
+                        <div className="flex justify-between items-center p-4 border-b border-gray-300">
+                          <h3 className="text-lg font-semibold">{userName}</h3>
+                          {isAdmin && (
+                            <button
+                              onClick={async () => {
+                                if (confirm(`Delete time availability for ${userName}?`)) {
+                                  const result = await film05Service.deleteTimeAvailability(userName);
+                                  if (!result.success) {
+                                    alert('Failed to delete: ' + result.error);
+                                  }
+                                }
+                              }}
+                              className="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600 transition-colors"
+                              title={`Delete ${userName}'s time availability`}
+                            >
+                              🗑️ Delete
+                            </button>
+                          )}
+                        </div>
+                        
+                        <div className="p-4">
+                          {Object.keys(timeAvailability).length === 0 ? (
+                            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                              {lang === 'th' ? 'ยังไม่มีข้อมูลเวลา' : 'No time data available'}
+                            </p>
+                          ) : (
+                            <div className="space-y-3">
+                              {Object.entries(timeAvailability).map(([date, hours]) => {
+                                const hasHours = Object.values(hours).some(v => v);
+                                if (!hasHours) return null;
+                                
+                                return (
+                                  <div key={date} className={`p-3 rounded border ${isDarkMode ? 'border-gray-500 bg-gray-600' : 'border-gray-300 bg-white'}`}>
+                                    <h4 className="font-medium mb-2 text-sm">{date}</h4>
+                                    <div className="grid grid-cols-12 gap-1">
+                                      {Array.from({ length: 24 }, (_, hour) => {
+                                        const isAvailable = hours[hour] === true;
+                                        const timeString = `${hour.toString().padStart(2, '0')}:00`;
+                                        
+                                        return (
+                                          <div
+                                            key={hour}
+                                            className={`text-xs p-1 rounded text-center ${
+                                              isAvailable 
+                                                ? 'bg-green-500 text-white' 
+                                                : isDarkMode 
+                                                  ? 'bg-gray-500 text-gray-300' 
+                                                  : 'bg-gray-200 text-gray-600'
+                                            }`}
+                                            title={`${timeString} - ${isAvailable ? 'Available' : 'Not available'}`}
+                                          >
+                                            {hour}
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Time Availability Page - Main Mode (Voting)
   if (currentRoute === 'time-availability') {
     const hours = Array.from({ length: 24 }, (_, i) => i);
     const dateKey = `${selectedTimeDate.getFullYear()}-${selectedTimeDate.getMonth() + 1}-${selectedTimeDate.getDate()}`;
@@ -1682,13 +1877,10 @@ const THEAvailabilityVote = () => {
             {Object.keys(timeSubmissions).length > 0 && (
               <div className="flex justify-center mt-6">
                 <button
-                  onClick={() => {
-                    setCurrentRoute('time-results');
-                    updateURL('time-results');
-                  }}
-                  className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg"
+                  onClick={() => setCurrentTimePage('view')}
+                  className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold text-lg"
                 >
-                  📊 {lang === 'th' ? 'ดูผลการโหวตเวลา' : 'View Time Results'}
+                  👥 {lang === 'th' ? 'ตารางเวลาว่างของทุกคน' : 'See Everyone\'s Time Availability'}
                 </button>
               </div>
             )}
@@ -1698,280 +1890,6 @@ const THEAvailabilityVote = () => {
     );
   }
 
-  // Time Availability Results Page
-  if (currentRoute === 'time-results') {
-    return (
-      <div className={`min-h-screen p-4 ${isDarkMode ? 'bg-gradient-to-br from-gray-900 to-gray-800' : 'bg-gradient-to-br from-blue-50 to-indigo-100'} relative`}>
-        <div className="absolute top-4 right-4 z-10 flex gap-2">
-          <button
-            onClick={() => setLang(l => l === 'th' ? 'en' : 'th')}
-            className={`px-3 py-1 border rounded text-sm shadow ${isDarkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-white border-gray-300'}`}
-          >
-            {lang === 'th' ? 'EN' : 'TH'}
-          </button>
-          <button
-            onClick={() => setIsDarkMode(!isDarkMode)}
-            className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-yellow-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'}`}
-          >
-            {isDarkMode ? '☀️' : '🌙'}
-          </button>
-        </div>
-
-        <div className="max-w-7xl mx-auto pt-16">
-          <div className={`rounded-xl shadow-lg p-6 ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white'}`}>
-            
-            <div className="flex justify-between items-center mb-6">
-              <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                {lang === 'th' ? 'ผลการโหวตเวลาที่สะดวก' : 'Time Availability Results'}
-              </h1>
-              <div className="flex gap-3 items-center">
-                {!isAdmin && (
-                  <button
-                    onClick={() => setShowAdminLogin(true)}
-                    className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors"
-                  >
-                    Admin
-                  </button>
-                )}
-                {isAdmin && (
-                  <span className="bg-green-600 text-white px-3 py-1 rounded text-sm">
-                    👨‍💼 Admin Mode
-                  </span>
-                )}
-                <button
-                  onClick={() => setIsDarkMode(!isDarkMode)}
-                  className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-yellow-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'}`}
-                  title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-                >
-                  {isDarkMode ? '☀️' : '🌙'}
-                </button>
-                <button
-                  onClick={() => {
-                    setCurrentRoute('home');
-                    updateURL('home');
-                  }}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  ← {lang === 'th' ? 'หน้าแรก' : 'Home'}
-                </button>
-              </div>
-            </div>
-
-            {isLoading ? (
-              <div className="text-center py-8">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <p className="mt-2">{lang === 'th' ? 'กำลังโหลด...' : 'Loading time availability...'}</p>
-              </div>
-            ) : Object.keys(timeSubmissions).length === 0 ? (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">🕐</div>
-                <h3 className={`text-xl font-semibold mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                  {lang === 'th' ? 'ยังไม่มีการโหวตเวลา' : 'No Time Votes Yet'}
-                </h3>
-                <p className={`mb-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                  {lang === 'th' ? 'ยังไม่มีใครโหวตเวลาที่สะดวก' : 'No one has voted on time availability yet'}
-                </p>
-                <button
-                  onClick={() => {
-                    setCurrentRoute('time-availability');
-                    updateURL('time-availability');
-                  }}
-                  className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold"
-                >
-                  {lang === 'th' ? 'เริ่มโหวตเวลา' : 'Start Time Voting'}
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {/* Summary Stats */}
-                <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                  <div className="text-center">
-                    <div className={`text-2xl font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
-                      {Object.keys(timeSubmissions).length}
-                    </div>
-                    <div className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                      {lang === 'th' ? 'ผู้โหวต' : 'Voters'}
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className={`text-2xl font-bold ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>
-                      {Object.values(timeSubmissions).reduce((total, user) => 
-                        total + Object.keys(user.timeAvailability || {}).length, 0
-                      )}
-                    </div>
-                    <div className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                      {lang === 'th' ? 'วันที่มีข้อมูล' : 'Days with Data'}
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className={`text-2xl font-bold ${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>
-                      {Object.values(timeSubmissions).reduce((total, user) => {
-                        return total + Object.values(user.timeAvailability || {}).reduce((dayTotal, dayHours) => 
-                          dayTotal + Object.values(dayHours).filter(Boolean).length, 0
-                        );
-                      }, 0)}
-                    </div>
-                    <div className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                      {lang === 'th' ? 'ช่วงเวลารวม' : 'Total Time Slots'}
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className={`text-2xl font-bold ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`}>
-                      {Math.round(
-                        Object.values(timeSubmissions).reduce((total, user) => {
-                          return total + Object.values(user.timeAvailability || {}).reduce((dayTotal, dayHours) => 
-                            dayTotal + Object.values(dayHours).filter(Boolean).length, 0
-                          );
-                        }, 0) / Math.max(Object.keys(timeSubmissions).length, 1)
-                      )}
-                    </div>
-                    <div className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                      {lang === 'th' ? 'เฉลี่ย/คน' : 'Avg per Person'}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Time Availability Table */}
-                <div className="space-y-4">
-                  {Object.entries(timeSubmissions).map(([userName, userData]) => {
-                    const timeAvailability = userData.timeAvailability || {};
-                    
-                    return (
-                      <div key={userName} className={`rounded-lg border ${isDarkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-200 bg-gray-50'}`}>
-                        <div className="flex justify-between items-center p-4 border-b border-gray-300">
-                          <h3 className="text-lg font-semibold">{userName}</h3>
-                          {isAdmin && (
-                            <button
-                              onClick={async () => {
-                                if (confirm(`Delete time availability for ${userName}?`)) {
-                                  const result = await film05Service.deleteTimeAvailability(userName);
-                                  if (!result.success) {
-                                    alert('Failed to delete: ' + result.error);
-                                  }
-                                }
-                              }}
-                              className="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600 transition-colors"
-                              title={`Delete ${userName}'s time availability`}
-                            >
-                              🗑️ Delete
-                            </button>
-                          )}
-                        </div>
-                        
-                        <div className="p-4">
-                          {Object.keys(timeAvailability).length === 0 ? (
-                            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                              {lang === 'th' ? 'ยังไม่มีข้อมูลเวลา' : 'No time data available'}
-                            </p>
-                          ) : (
-                            <div className="space-y-3">
-                              {Object.entries(timeAvailability).map(([date, hours]) => {
-                                const hasHours = Object.values(hours).some(v => v);
-                                if (!hasHours) return null;
-                                
-                                return (
-                                  <div key={date} className={`p-3 rounded border ${isDarkMode ? 'border-gray-500 bg-gray-600' : 'border-gray-300 bg-white'}`}>
-                                    <h4 className="font-medium mb-2 text-sm">{date}</h4>
-                                    <div className="grid grid-cols-12 gap-1">
-                                      {Array.from({ length: 24 }, (_, hour) => {
-                                        const isAvailable = hours[hour] === true;
-                                        const timeString = `${hour.toString().padStart(2, '0')}:00`;
-                                        
-                                        return (
-                                          <div
-                                            key={hour}
-                                            className={`text-xs p-1 rounded text-center ${
-                                              isAvailable 
-                                                ? 'bg-green-500 text-white' 
-                                                : isDarkMode 
-                                                  ? 'bg-gray-700 text-gray-400' 
-                                                  : 'bg-gray-100 text-gray-500'
-                                            }`}
-                                            title={`${timeString} - ${isAvailable ? 'Available' : 'Not available'}`}
-                                          >
-                                            {hour}
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
-                                    <div className="mt-2 text-xs">
-                                      <strong>{lang === 'th' ? 'ช่วงเวลาที่ว่าง:' : 'Available hours:'}</strong>
-                                      <div className="flex flex-wrap gap-1 mt-1">
-                                        {Object.keys(hours)
-                                          .filter(hour => hours[hour])
-                                          .sort((a, b) => parseInt(a) - parseInt(b))
-                                          .map(hour => (
-                                            <span key={hour} className="px-1 py-0.5 bg-green-100 text-green-800 rounded text-xs">
-                                              {hour.padStart(2, '0')}:00
-                                            </span>
-                                          ))
-                                        }
-                                      </div>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Action buttons */}
-                <div className="flex justify-center gap-4 pt-6">
-                  <button
-                    onClick={() => {
-                      setCurrentRoute('time-availability');
-                      updateURL('time-availability');
-                    }}
-                    className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold"
-                  >
-                    {lang === 'th' ? '+ เพิ่มการโหวต' : '+ Add Your Vote'}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Admin Login Modal */}
-        {showAdminLogin && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className={`rounded-lg p-6 max-w-sm w-full mx-4 ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white'}`}>
-              <h3 className="text-lg font-bold mb-4">Admin Login</h3>
-              <input
-                type="password"
-                placeholder="Admin password"
-                value={adminPassword}
-                onChange={(e) => setAdminPassword(e.target.value)}
-                className={`w-full px-3 py-2 border rounded mb-4 ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'}`}
-                onKeyPress={(e) => e.key === 'Enter' && handleAdminLogin()}
-              />
-              <div className="flex gap-2">
-                <button
-                  onClick={handleAdminLogin}
-                  className="flex-1 bg-red-600 text-white py-2 rounded hover:bg-red-700 transition-colors"
-                >
-                  Login
-                </button>
-                <button
-                  onClick={() => {
-                    setShowAdminLogin(false);
-                    setAdminPassword('');
-                  }}
-                  className={`flex-1 py-2 rounded transition-colors ${isDarkMode ? 'bg-gray-600 hover:bg-gray-700' : 'bg-gray-200 hover:bg-gray-300'}`}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
 
   // Admin Main Page (Login or Dashboard)
   if (currentRoute === 'admin-main') {
