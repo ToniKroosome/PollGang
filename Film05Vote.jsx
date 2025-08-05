@@ -1809,6 +1809,17 @@ const THEAvailabilityVote = () => {
 
   // Time Availability Page - View Mode (Results)
   if (currentRoute === 'time-availability' && currentTimePage === 'view') {
+    // Filter timeSubmissions for current poll only
+    const filteredTimeSubmissions = currentTimePollId 
+      ? Object.fromEntries(
+          Object.entries(timeSubmissions).filter(([userName, userData]) => {
+            // Check if this user's data is for the current poll
+            return userData.pollId === currentTimePollId || 
+                   (userData.selectedDate && timePolls[currentTimePollId] && 
+                    userData.selectedDate === timePolls[currentTimePollId].targetDate);
+          })
+        )
+      : timeSubmissions;
     return (
       <div className={`min-h-screen p-4 ${isDarkMode ? 'bg-gradient-to-br from-gray-900 to-gray-800' : 'bg-gradient-to-br from-blue-50 to-indigo-100'} relative`}>
         <div className="absolute top-4 right-4 z-10 flex gap-2">
@@ -1873,7 +1884,7 @@ const THEAvailabilityVote = () => {
                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                 <p className="mt-2">{lang === 'th' ? 'กำลังโหลด...' : 'Loading time availability...'}</p>
               </div>
-            ) : Object.keys(timeSubmissions).length === 0 ? (
+            ) : Object.keys(filteredTimeSubmissions).length === 0 ? (
               <div className="text-center py-12">
                 <div className="text-6xl mb-4">🕐</div>
                 <h3 className={`text-xl font-semibold mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
@@ -1886,8 +1897,9 @@ const THEAvailabilityVote = () => {
                 {/* Debug Info */}
                 <div className={`mb-4 p-3 rounded text-xs ${isDarkMode ? 'bg-gray-600' : 'bg-gray-100'}`}>
                   <strong>Debug Info:</strong><br/>
-                  timeSubmissions keys: {Object.keys(timeSubmissions).length}<br/>
-                  timeSubmissions: {JSON.stringify(timeSubmissions, null, 2)}
+                  filteredTimeSubmissions keys: {Object.keys(filteredTimeSubmissions).length}<br/>
+                  currentTimePollId: {currentTimePollId}<br/>
+                  filteredTimeSubmissions: {JSON.stringify(filteredTimeSubmissions, null, 2)}
                 </div>
                 
                 <button
@@ -1920,7 +1932,7 @@ const THEAvailabilityVote = () => {
                 <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
                   <div className="text-center">
                     <div className={`text-2xl font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
-                      {Object.keys(timeSubmissions).length}
+                      {Object.keys(filteredTimeSubmissions).length}
                     </div>
                     <div className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                       {lang === 'th' ? 'ผู้โหวต' : 'Voters'}
@@ -1966,7 +1978,7 @@ const THEAvailabilityVote = () => {
 
                 {/* Time Availability Table */}
                 <div className="space-y-4">
-                  {Object.entries(timeSubmissions).map(([userName, userData]) => {
+                  {Object.entries(filteredTimeSubmissions).map(([userName, userData]) => {
                     const timeAvailability = userData.timeAvailability || {};
                     
                     return (
@@ -2339,7 +2351,9 @@ const THEAvailabilityVote = () => {
                     
                     const timeData = {
                       name: timeUserName.trim(),
-                      timeAvailability: updatedAvailability
+                      timeAvailability: updatedAvailability,
+                      pollId: currentTimePollId,
+                      selectedDate: selectedTimeDate.toISOString()
                     };
                     
                     console.log('🔍 Debug: Final timeData being sent to Firebase:', timeData);
