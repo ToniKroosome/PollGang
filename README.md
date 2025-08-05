@@ -38,16 +38,27 @@ A bilingual (Thai/English) web application for Film 05 group members to vote on 
 - **Shareable Poll Links**: Direct URLs for specific polls
 - **Copy Poll URLs**: Easy sharing with one-click copy functionality
 
-### Crash Recovery System (v2.1)
-- **Auto-Save**: Automatically saves voting progress to prevent data loss
+### Crash Recovery System (v2.2)
+- **Auto-Save**: Automatically saves voting progress to prevent data loss at each step
 - **Recovery Detection**: Detects unsaved data when app is reopened
 - **Smart Recovery**: Recovers partial votes, names, and selections up to 24 hours old
-- **Navigation-Aware Recovery**: Works with new navigation history system
-- **Multi-Flow Recovery**: Supports date availability, time availability, and time poll creation flows
-- **Time Poll Creation Recovery**: Saves poll titles, target dates, and creation progress
+- **Step-by-Step Recovery**: Recovers users to exact step in voting process
+- **Multi-Flow Recovery**: Supports complete date and time voting workflows
+- **Poll Creation Recovery**: Saves poll titles, dates, and creation progress
+- **Name Input Recovery**: Recovers voter names for specific polls
+- **Calendar Selection Recovery**: Recovers partially selected dates
+- **Restaurant Preference Recovery**: Recovers restaurant selections
+- **Time Selection Recovery**: Recovers partially selected time slots
+- **Navigation-Aware Recovery**: Restores correct page and step context
 - **Warning System**: Warns users before leaving with unsaved changes
 - **Bilingual Recovery**: Recovery messages in both Thai and English
 - **Enhanced Recovery Types**: Separate recovery for voting vs poll creation workflows
+
+#### Recovery Flow Support
+- **Date Voting**: Name Input → Calendar Selection → Restaurant Preference → Submission
+- **Time Voting**: Name Input → Time Selection → Submission  
+- **Poll Creation**: Title/Date Input → Poll Setup → Navigation to Voting
+- **Results Viewing**: Poll context and viewing preferences
 
 ## Technology Stack
 
@@ -140,22 +151,41 @@ https://pollgang.onrender.com/?page=results&poll=poll_1699123456789      # Speci
 ```
 Homepage
 ├── Date Availability Flow:
-│   Start Voting → Create Poll Form → Calendar Selection → Restaurant Preference → Submission Complete
+│   Start Voting → Create Poll Form → Name Input → Calendar Selection → Restaurant Preference → Thank You → Results
 ├── Time Availability Flow:
-│   Select Times → Create Time Poll Form → Name Input → Time Selection → Submission Complete
+│   Select Times → Create Time Poll Form → Name Input → Time Selection → Thank You → Results
 └── Admin Flow:
     Admin Access → Dashboard → 
-    ├── Date Polls: Poll List → Create/View/Manage Date Polls
-    └── Time Polls: Time Poll List → Create/View/Manage Time Polls
+    ├── Date Polls: Poll List → Create Poll → Name Input → Calendar → Restaurant → Thank You → Results
+    └── Time Polls: Time Poll List → Create Poll → Name Input → Time Selection → Thank You → Results
 ```
 
-### Navigation Features (v2.1)
+### Complete Voting Workflows
+
+#### Date Poll Voting Flow (7 Steps)
+1. **Poll Creation**: Admin creates date poll with title, month, year
+2. **Poll Access**: User accesses poll via shared link or admin panel
+3. **Name Input**: User enters their name (unique per poll)
+4. **Calendar Selection**: User marks availability on calendar (Available/Maybe/Not Available)
+5. **Restaurant Preference**: User suggests restaurant preference (optional)
+6. **Submission Complete**: "Thank You for Vote" page with confirmation
+7. **View Results**: Access to aggregated results showing all voter responses
+
+#### Time Poll Voting Flow (6 Steps)  
+1. **Poll Creation**: Admin creates time poll with title, target date
+2. **Poll Access**: User accesses poll via shared link or admin panel
+3. **Name Input**: User enters their name (unique per poll)
+4. **Time Selection**: User selects available hours throughout the day
+5. **Submission Complete**: "Thank You for Vote" page with confirmation
+6. **View Results**: Access to aggregated results showing all voter time preferences
+
+### Navigation Features (v2.2)
 - **Smart Back Navigation**: Back buttons now properly navigate to the previous page instead of defaulting to admin login
 - **Navigation History Tracking**: System tracks where users came from for proper back navigation
-- **Consistent User Flow**: Both date and time availability follow the same poll-creation-first pattern
-- **URL-based Routing**: Each page has its own URL for direct access and bookmarking
+- **Step-Aware Navigation**: Each step in voting process has proper forward/back navigation
+- **URL-based Routing**: Each page and step has its own URL for direct access and bookmarking
+- **Poll-Specific URLs**: Each poll generates unique voting and results URLs
 - **Unified Poll Management**: Separate admin interfaces for date polls and time polls
-- **Poll Creation Workflow**: Structured creation process for both poll types
 
 ## Firebase Configuration
 
@@ -257,23 +287,23 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Check browser console for debugging information
 - Firebase data can be viewed in Firebase Console
 
-## Recent Updates (v2.1)
+## Recent Updates (v2.2)
 
 ### ✅ Completed
-- [x] **Time slot selection** - Users can now vote on specific hours throughout the day
-- [x] **Fixed navigation issues** - Back buttons now work correctly with proper history tracking
-- [x] **Consistent user flows** - Both date and time voting follow the same name-input pattern
-- [x] **Smart back navigation** - No more unexpected redirects to admin login
+- [x] **Complete Voting Workflows** - Full 7-step voting process for both date and time polls
+- [x] **Step-by-Step Navigation** - Name Input → Selection → Preferences → Thank You → Results
 - [x] **Time Poll Management** - Complete admin interface for creating and managing time polls
-- [x] **Time Poll Creation Flow** - Structured poll creation similar to date polls
-- [x] **Enhanced Crash Recovery** - Supports time poll creation workflow recovery
+- [x] **Shareable Poll Links** - Each poll has unique URLs for voting and results
+- [x] **Enhanced Crash Recovery** - Step-aware recovery system supporting complete workflows
+- [x] **Poll-Specific Pages** - Each poll creates unique voting pages and result views
+- [x] **Smart Back Navigation** - Proper navigation history tracking throughout all steps
 
 ### 🔄 Enhanced Features
-- **Navigation System**: Complete overhaul with history tracking and proper back navigation
-- **Time Availability**: Full implementation with poll creation → time selection → submission flow
-- **Time Poll Management**: Admin interface for creating, viewing, and managing time voting sessions
-- **User Experience**: Consistent patterns across all voting flows
-- **Crash Recovery v2.1**: Extended support for time poll creation and enhanced recovery workflows
+- **Complete User Flows**: 7-step voting process with proper step transitions
+- **Poll Management**: Separate admin interfaces for date and time polls with copy links
+- **Crash Recovery v2.2**: Step-by-step recovery supporting all voting stages
+- **Navigation System**: Complete workflow navigation with step-aware routing
+- **Shareable URLs**: Each poll generates unique shareable voting and results links
 
 ## Future Enhancements
 
