@@ -1812,14 +1812,14 @@ const THEAvailabilityVote = () => {
     // Filter timeSubmissions for current poll only
     const filteredTimeSubmissions = currentTimePollId 
       ? Object.fromEntries(
-          Object.entries(timeSubmissions).filter(([userName, userData]) => {
+          Object.entries(timeSubmissions || {}).filter(([userName, userData]) => {
             // Check if this user's data is for the current poll
-            return userData.pollId === currentTimePollId || 
+            return userData && (userData.pollId === currentTimePollId || 
                    (userData.selectedDate && timePolls[currentTimePollId] && 
-                    userData.selectedDate === timePolls[currentTimePollId].targetDate);
+                    userData.selectedDate === timePolls[currentTimePollId].targetDate));
           })
         )
-      : timeSubmissions;
+      : (timeSubmissions || {});
     return (
       <div className={`min-h-screen p-4 ${isDarkMode ? 'bg-gradient-to-br from-gray-900 to-gray-800' : 'bg-gradient-to-br from-blue-50 to-indigo-100'} relative`}>
         <div className="absolute top-4 right-4 z-10 flex gap-2">
@@ -1940,7 +1940,7 @@ const THEAvailabilityVote = () => {
                   </div>
                   <div className="text-center">
                     <div className={`text-2xl font-bold ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>
-                      {Object.values(timeSubmissions).reduce((total, user) => 
+                      {Object.values(filteredTimeSubmissions).reduce((total, user) => 
                         total + Object.keys(user.timeAvailability || {}).length, 0
                       )}
                     </div>
@@ -1950,7 +1950,7 @@ const THEAvailabilityVote = () => {
                   </div>
                   <div className="text-center">
                     <div className={`text-2xl font-bold ${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>
-                      {Object.values(timeSubmissions).reduce((total, user) => {
+                      {Object.values(filteredTimeSubmissions).reduce((total, user) => {
                         return total + Object.values(user.timeAvailability || {}).reduce((dayTotal, dayHours) => 
                           dayTotal + Object.values(dayHours).filter(Boolean).length, 0
                         );
@@ -1963,11 +1963,11 @@ const THEAvailabilityVote = () => {
                   <div className="text-center">
                     <div className={`text-2xl font-bold ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`}>
                       {Math.round(
-                        Object.values(timeSubmissions).reduce((total, user) => {
+                        Object.values(filteredTimeSubmissions).reduce((total, user) => {
                           return total + Object.values(user.timeAvailability || {}).reduce((dayTotal, dayHours) => 
                             dayTotal + Object.values(dayHours).filter(Boolean).length, 0
                           );
-                        }, 0) / Math.max(Object.keys(timeSubmissions).length, 1)
+                        }, 0) / Math.max(Object.keys(filteredTimeSubmissions).length, 1)
                       )}
                     </div>
                     <div className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
