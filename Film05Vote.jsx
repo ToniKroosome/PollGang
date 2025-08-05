@@ -326,7 +326,7 @@ const THEAvailabilityVote = () => {
   const [timeSubmissions, setTimeSubmissions] = useState({});
   const [timeUserName, setTimeUserName] = useState('');
   const [currentTimePage, setCurrentTimePage] = useState('main');
-  const [firstClickMode, setFirstClickMode] = useState('available'); // 'available' or 'not-available'
+  const [firstClickMode, setFirstClickMode] = useState('available'); // 'available', 'maybe', 'not-available', 'none'
 
   useEffect(() => {
     if (THEName && savedData[THEName]) {
@@ -2305,20 +2305,31 @@ const THEAvailabilityVote = () => {
                   {lang === 'th' ? 'โหมดคลิกครั้งแรก:' : 'First Click Mode:'}
                 </span>
                 <button
-                  onClick={() => setFirstClickMode(prev => prev === 'available' ? 'not-available' : 'available')}
+                  onClick={() => {
+                    setFirstClickMode(prev => {
+                      if (prev === 'available') return 'maybe';
+                      if (prev === 'maybe') return 'not-available';
+                      if (prev === 'not-available') return 'none';
+                      return 'available';
+                    });
+                  }}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     firstClickMode === 'available' 
-                      ? isDarkMode 
-                        ? 'bg-green-600 text-white' 
-                        : 'bg-green-500 text-white'
-                      : isDarkMode 
-                        ? 'bg-red-600 text-white' 
-                        : 'bg-red-500 text-white'
+                      ? isDarkMode ? 'bg-green-600 text-white' : 'bg-green-500 text-white'
+                      : firstClickMode === 'maybe'
+                        ? isDarkMode ? 'bg-yellow-600 text-white' : 'bg-yellow-500 text-white'
+                        : firstClickMode === 'not-available'
+                          ? isDarkMode ? 'bg-red-600 text-white' : 'bg-red-500 text-white'
+                          : isDarkMode ? 'bg-gray-600 text-white' : 'bg-gray-500 text-white'
                   }`}
                 >
                   {firstClickMode === 'available' 
                     ? (lang === 'th' ? '✅ ว่าง (1 คลิก)' : '✅ Available (1 click)')
-                    : (lang === 'th' ? '❌ ไม่ว่าง (1 คลิก)' : '❌ Not Available (1 click)')
+                    : firstClickMode === 'maybe'
+                      ? (lang === 'th' ? '⚠️ อาจได้ (1 คลิก)' : '⚠️ Maybe (1 click)')
+                      : firstClickMode === 'not-available'
+                        ? (lang === 'th' ? '❌ ไม่ว่าง (1 คลิก)' : '❌ Not Available (1 click)')
+                        : (lang === 'th' ? '⬜ ล้าง (1 คลิก)' : '⬜ Clear (1 click)')
                   }
                 </button>
               </div>
@@ -2334,10 +2345,21 @@ const THEAvailabilityVote = () => {
                       onClick={() => {
                         let nextStatus;
                         if (firstClickMode === 'available') {
-                          // Default mode: 0 -> 1 -> 2 -> 3 -> 0 (None -> Green -> Yellow -> Red -> None)
+                          // Available first: 0 -> 1 -> 2 -> 3 -> 0 (None -> Green -> Yellow -> Red -> None)
                           nextStatus = (hourStatus + 1) % 4;
-                        } else {
-                          // Not-available first mode: 0 -> 3 -> 1 -> 2 -> 0 (None -> Red -> Green -> Yellow -> None)
+                        } else if (firstClickMode === 'maybe') {
+                          // Maybe first: 0 -> 2 -> 1 -> 3 -> 0 (None -> Yellow -> Green -> Red -> None)
+                          if (hourStatus === 0) {
+                            nextStatus = 2; // None -> Yellow
+                          } else if (hourStatus === 2) {
+                            nextStatus = 1; // Yellow -> Green
+                          } else if (hourStatus === 1) {
+                            nextStatus = 3; // Green -> Red
+                          } else if (hourStatus === 3) {
+                            nextStatus = 0; // Red -> None
+                          }
+                        } else if (firstClickMode === 'not-available') {
+                          // Not-available first: 0 -> 3 -> 1 -> 2 -> 0 (None -> Red -> Green -> Yellow -> None)
                           if (hourStatus === 0) {
                             nextStatus = 3; // None -> Red
                           } else if (hourStatus === 3) {
@@ -2346,6 +2368,13 @@ const THEAvailabilityVote = () => {
                             nextStatus = 2; // Green -> Yellow
                           } else if (hourStatus === 2) {
                             nextStatus = 0; // Yellow -> None
+                          }
+                        } else if (firstClickMode === 'none') {
+                          // Clear first: 0 -> 0 -> 1 -> 2 -> 3 (None -> None -> Green -> Yellow -> Red)
+                          if (hourStatus === 0) {
+                            nextStatus = 0; // None -> None (stays clear)
+                          } else {
+                            nextStatus = (hourStatus + 1) % 4; // Continue normal cycle
                           }
                         }
                         
