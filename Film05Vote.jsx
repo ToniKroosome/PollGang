@@ -1219,7 +1219,7 @@ const THEAvailabilityVote = () => {
     });
     
     // Add orphaned submission groups
-    Object.values(submissionGroups).forEach(group => {
+    Object.values(submissionGroups || {}).forEach(group => {
       pollsList.push({
         title: `${getMonthName(group.month)} ${group.year} (Auto-created)`,
         ...group
@@ -1334,7 +1334,7 @@ const THEAvailabilityVote = () => {
                       <div className="flex justify-between text-sm">
                         <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>Restaurant Prefs:</span>
                         <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                          {poll.submissions.filter(s => s.restaurant).length}
+                          {(poll.submissions || []).filter(s => s && s.restaurant).length}
                         </span>
                       </div>
                     </div>
@@ -1609,7 +1609,7 @@ const THEAvailabilityVote = () => {
                         {timePoll.responses.slice(0, 3).map((response, index) => (
                           <div key={index} className={`text-xs flex justify-between ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                             <span>{response.userName}</span>
-                            <span>{Object.values(response.data).filter(Boolean).length} slots</span>
+                            <span>{Object.values(response.data || {}).filter(Boolean).length} slots</span>
                           </div>
                         ))}
                         {timePoll.responses.length > 3 && (
@@ -2010,8 +2010,8 @@ const THEAvailabilityVote = () => {
                             </p>
                           ) : (
                             <div className="space-y-3">
-                              {Object.entries(timeAvailability).map(([date, hours]) => {
-                                const hasHours = Object.values(hours).some(v => v);
+                              {Object.entries(timeAvailability || {}).map(([date, hours]) => {
+                                const hasHours = Object.values(hours || {}).some(v => v);
                                 if (!hasHours) return null;
                                 
                                 return (
@@ -2395,7 +2395,7 @@ const THEAvailabilityVote = () => {
                   {lang === 'th' ? 'ยังไม่มีข้อมูลเวลาที่บันทึก' : 'No saved time data yet'}
                 </p>
               ) : (
-                Object.entries(timeSubmissions).map(([userName, userData]) => {
+                Object.entries(timeSubmissions || {}).map(([userName, userData]) => {
                   const timeAvailability = userData.timeAvailability || {};
                   
                   return (
@@ -2426,8 +2426,8 @@ const THEAvailabilityVote = () => {
                             {lang === 'th' ? 'ยังไม่มีข้อมูลเวลา' : 'No time data'}
                           </p>
                         ) : (
-                          Object.entries(timeAvailability).map(([date, hours]) => {
-                            const hasHours = Object.values(hours).some(v => v);
+                          Object.entries(timeAvailability || {}).map(([date, hours]) => {
+                            const hasHours = Object.values(hours || {}).some(v => v);
                             if (!hasHours) return null;
                             
                             return (
