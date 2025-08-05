@@ -1544,7 +1544,7 @@ const THEAvailabilityVote = () => {
                           {timePoll.title}
                         </h3>
                         <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                          {timePoll.date.toLocaleDateString()}
+                          {new Date(timePoll.targetDate).toLocaleDateString()}
                         </p>
                       </div>
                       <div className="flex flex-col gap-1">
