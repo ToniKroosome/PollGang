@@ -394,6 +394,18 @@ const THEAvailabilityVote = () => {
     }
   }, [newTimePollTitle, selectedTimeDate, currentTimePollId]);
 
+  // Load time polls from localStorage on mount
+  useEffect(() => {
+    const storedTimePolls = localStorage.getItem('film05_time_polls');
+    if (storedTimePolls) {
+      try {
+        setTimePolls(JSON.parse(storedTimePolls));
+      } catch (error) {
+        console.error('Error loading time polls:', error);
+      }
+    }
+  }, []);
+
   // Warn before leaving with unsaved changes
   useEffect(() => {
     const handleBeforeUnload = (e) => {
@@ -1438,17 +1450,6 @@ const THEAvailabilityVote = () => {
     );
   }
 
-  // Load time polls from localStorage on mount
-  useEffect(() => {
-    const storedTimePolls = localStorage.getItem('film05_time_polls');
-    if (storedTimePolls) {
-      try {
-        setTimePolls(JSON.parse(storedTimePolls));
-      } catch (error) {
-        console.error('Error loading time polls:', error);
-      }
-    }
-  }, []);
 
   // Time Poll List Page
   if (currentRoute === 'time-poll-list') {
