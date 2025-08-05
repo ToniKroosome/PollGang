@@ -1649,7 +1649,7 @@ const THEAvailabilityVote = () => {
                         {timePoll.responses.slice(0, 3).map((response, index) => (
                           <div key={index} className={`text-xs flex justify-between ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                             <span>{response.userName}</span>
-                            <span>{Object.values(response.data || {}).filter(Boolean).length} slots</span>
+                            <span>{Object.values(response.data || {}).filter(status => status > 0).length} slots</span>
                           </div>
                         ))}
                         {timePoll.responses.length > 3 && (
@@ -1992,7 +1992,7 @@ const THEAvailabilityVote = () => {
                     <div className={`text-2xl font-bold ${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>
                       {Object.values(filteredTimeSubmissions).reduce((total, user) => {
                         return total + Object.values(user.timeAvailability || {}).reduce((dayTotal, dayHours) => 
-                          dayTotal + Object.values(dayHours).filter(Boolean).length, 0
+                          dayTotal + Object.values(dayHours).filter(status => status > 0).length, 0
                         );
                       }, 0)}
                     </div>
@@ -2005,7 +2005,7 @@ const THEAvailabilityVote = () => {
                       {Math.round(
                         Object.values(filteredTimeSubmissions).reduce((total, user) => {
                           return total + Object.values(user.timeAvailability || {}).reduce((dayTotal, dayHours) => 
-                            dayTotal + Object.values(dayHours).filter(Boolean).length, 0
+                            dayTotal + Object.values(dayHours).filter(status => status > 0).length, 0
                           );
                         }, 0) / Math.max(Object.keys(filteredTimeSubmissions).length, 1)
                       )}
@@ -2059,22 +2059,31 @@ const THEAvailabilityVote = () => {
                                     <h4 className="font-medium mb-2 text-sm">{date}</h4>
                                     <div className="grid grid-cols-12 gap-1">
                                       {Array.from({ length: 24 }, (_, hour) => {
-                                        const isAvailable = hours[hour] === true;
+                                        const hourStatus = hours[hour] || 0; // 0=none, 1=available, 2=maybe, 3=not available
                                         const timeString = `${hour.toString().padStart(2, '0')}:00`;
                                         
                                         return (
                                           <div
                                             key={hour}
                                             className={`text-xs p-1 rounded text-center ${
-                                              isAvailable 
+                                              hourStatus === 1 
                                                 ? 'bg-green-500 text-white' 
-                                                : isDarkMode 
-                                                  ? 'bg-gray-500 text-gray-300' 
-                                                  : 'bg-gray-200 text-gray-600'
+                                                : hourStatus === 2
+                                                  ? 'bg-yellow-500 text-white'
+                                                  : hourStatus === 3
+                                                    ? 'bg-red-500 text-white'
+                                                    : isDarkMode 
+                                                      ? 'bg-gray-500 text-gray-300' 
+                                                      : 'bg-gray-200 text-gray-600'
                                             }`}
-                                            title={`${timeString} - ${isAvailable ? 'Available' : 'Not available'}`}
+                                            title={`${timeString} - ${
+                                              hourStatus === 1 ? 'Available' : 
+                                              hourStatus === 2 ? 'Maybe' : 
+                                              hourStatus === 3 ? 'Not Available' : 
+                                              'No response'
+                                            }`}
                                           >
-                                            {hour}
+                                            {hourStatus === 1 ? '✅' : hourStatus === 2 ? '⚠️' : hourStatus === 3 ? '❌' : hour}
                                           </div>
                                         );
                                       })}
@@ -2251,38 +2260,72 @@ const THEAvailabilityVote = () => {
 
             {/* Time grid */}
             <div className="mb-6">
-              <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                {lang === 'th' ? 'เลือกเวลาที่สะดวก (คลิกเพื่อเลือก/ยกเลิก)' : 'Select Available Hours (click to toggle)'}
+              <h3 className={`text-lg font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                {lang === 'th' ? 'เลือกเวลาที่สะดวก (คลิกเพื่อสลับ: เปล่า → ว่าง → อาจได้ → ไม่ว่าง)' : 'Select Available Hours (click to cycle: None → Available → Maybe → Not Available)'}
               </h3>
+              
+              {/* Color Legend */}
+              <div className="mb-4 flex flex-wrap gap-4 text-xs">
+                <div className="flex items-center gap-1">
+                  <div className="w-4 h-4 bg-green-500 rounded border"></div>
+                  <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
+                    ✅ {lang === 'th' ? 'ว่าง' : 'Available'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-4 h-4 bg-yellow-500 rounded border"></div>
+                  <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
+                    ⚠️ {lang === 'th' ? 'อาจได้' : 'Maybe'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-4 h-4 bg-red-500 rounded border"></div>
+                  <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
+                    ❌ {lang === 'th' ? 'ไม่ว่าง' : 'Not Available'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className={`w-4 h-4 rounded border ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-100 border-gray-300'}`}></div>
+                  <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
+                    {lang === 'th' ? 'ไม่ระบุ' : 'None'}
+                  </span>
+                </div>
+              </div>
               
               <div className="grid grid-cols-6 md:grid-cols-8 gap-2">
                 {hours.map(hour => {
-                  const isSelected = currentDateAvailability[hour] === true;
+                  const hourStatus = currentDateAvailability[hour] || 0; // 0=none, 1=available, 2=maybe, 3=not available
                   const timeString = `${hour.toString().padStart(2, '0')}:00`;
                   
                   return (
                     <button
                       key={hour}
                       onClick={() => {
+                        // Cycle through states: 0 -> 1 -> 2 -> 3 -> 0
+                        const nextStatus = (hourStatus + 1) % 4;
                         setTimeAvailability(prev => ({
                           ...prev,
                           [dateKey]: {
                             ...prev[dateKey],
-                            [hour]: !isSelected
+                            [hour]: nextStatus === 0 ? undefined : nextStatus
                           }
                         }));
                       }}
                       className={`p-3 rounded-lg border-2 transition-all ${
-                        isSelected 
+                        hourStatus === 1 
                           ? 'bg-green-500 border-green-600 text-white transform scale-105' 
-                          : isDarkMode 
-                            ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600' 
-                            : 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200'
+                          : hourStatus === 2
+                            ? 'bg-yellow-500 border-yellow-600 text-white transform scale-105'
+                            : hourStatus === 3
+                              ? 'bg-red-500 border-red-600 text-white transform scale-105'
+                              : isDarkMode 
+                                ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600' 
+                                : 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
                       <div className="text-sm font-semibold">{timeString}</div>
                       <div className="text-xs mt-1">
-                        {hour < 12 ? 'AM' : 'PM'}
+                        {hourStatus === 1 ? '✅' : hourStatus === 2 ? '⚠️' : hourStatus === 3 ? '❌' : (hour < 12 ? 'AM' : 'PM')}
                       </div>
                     </button>
                   );
@@ -2298,45 +2341,45 @@ const THEAvailabilityVote = () => {
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => {
-                    // Morning hours (6-12)
+                    // Morning hours (6-12) - set as available (1)
                     const morning = {};
-                    for (let h = 6; h < 12; h++) morning[h] = true;
+                    for (let h = 6; h < 12; h++) morning[h] = 1;
                     setTimeAvailability(prev => ({
                       ...prev,
                       [dateKey]: { ...prev[dateKey], ...morning }
                     }));
                   }}
-                  className={`px-4 py-2 rounded-lg text-sm ${isDarkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} text-white`}
+                  className={`px-4 py-2 rounded-lg text-sm ${isDarkMode ? 'bg-green-600 hover:bg-green-700' : 'bg-green-500 hover:bg-green-600'} text-white`}
                 >
-                  {lang === 'th' ? 'เช้า (6:00-12:00)' : 'Morning (6:00-12:00)'}
+                  {lang === 'th' ? '✅ เช้า (6:00-12:00)' : '✅ Morning (6:00-12:00)'}
                 </button>
                 <button
                   onClick={() => {
-                    // Afternoon hours (12-18)
+                    // Afternoon hours (12-18) - set as available (1)
                     const afternoon = {};
-                    for (let h = 12; h < 18; h++) afternoon[h] = true;
+                    for (let h = 12; h < 18; h++) afternoon[h] = 1;
                     setTimeAvailability(prev => ({
                       ...prev,
                       [dateKey]: { ...prev[dateKey], ...afternoon }
                     }));
                   }}
-                  className={`px-4 py-2 rounded-lg text-sm ${isDarkMode ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-yellow-500 hover:bg-yellow-600'} text-white`}
+                  className={`px-4 py-2 rounded-lg text-sm ${isDarkMode ? 'bg-green-600 hover:bg-green-700' : 'bg-green-500 hover:bg-green-600'} text-white`}
                 >
-                  {lang === 'th' ? 'บ่าย (12:00-18:00)' : 'Afternoon (12:00-18:00)'}
+                  {lang === 'th' ? '✅ บ่าย (12:00-18:00)' : '✅ Afternoon (12:00-18:00)'}
                 </button>
                 <button
                   onClick={() => {
-                    // Evening hours (18-24)
+                    // Evening hours (18-24) - set as available (1)
                     const evening = {};
-                    for (let h = 18; h < 24; h++) evening[h] = true;
+                    for (let h = 18; h < 24; h++) evening[h] = 1;
                     setTimeAvailability(prev => ({
                       ...prev,
                       [dateKey]: { ...prev[dateKey], ...evening }
                     }));
                   }}
-                  className={`px-4 py-2 rounded-lg text-sm ${isDarkMode ? 'bg-purple-600 hover:bg-purple-700' : 'bg-purple-500 hover:bg-purple-600'} text-white`}
+                  className={`px-4 py-2 rounded-lg text-sm ${isDarkMode ? 'bg-green-600 hover:bg-green-700' : 'bg-green-500 hover:bg-green-600'} text-white`}
                 >
-                  {lang === 'th' ? 'เย็น (18:00-24:00)' : 'Evening (18:00-24:00)'}
+                  {lang === 'th' ? '✅ เย็น (18:00-24:00)' : '✅ Evening (18:00-24:00)'}
                 </button>
                 <button
                   onClick={() => {
@@ -2499,13 +2542,24 @@ const THEAvailabilityVote = () => {
                                 <h4 className="font-medium mb-2">{date}</h4>
                                 <div className="flex flex-wrap gap-1">
                                   {Object.keys(hours)
-                                    .filter(hour => hours[hour])
+                                    .filter(hour => hours[hour] > 0) // Show any status > 0
                                     .sort((a, b) => parseInt(a) - parseInt(b))
-                                    .map(hour => (
-                                      <span key={hour} className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">
-                                        {hour.padStart(2, '0')}:00
-                                      </span>
-                                    ))
+                                    .map(hour => {
+                                      const status = hours[hour];
+                                      return (
+                                        <span 
+                                          key={hour} 
+                                          className={`px-2 py-1 rounded text-xs ${
+                                            status === 1 ? 'bg-green-100 text-green-800' :
+                                            status === 2 ? 'bg-yellow-100 text-yellow-800' :
+                                            status === 3 ? 'bg-red-100 text-red-800' :
+                                            'bg-gray-100 text-gray-800'
+                                          }`}
+                                        >
+                                          {status === 1 ? '✅' : status === 2 ? '⚠️' : status === 3 ? '❌' : ''} {hour.padStart(2, '0')}:00
+                                        </span>
+                                      );
+                                    })
                                   }
                                 </div>
                               </div>
