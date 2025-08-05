@@ -2390,12 +2390,24 @@ const THEAvailabilityVote = () => {
             </h2>
             
             <div className="space-y-4">
-              {Object.keys(timeSubmissions).length === 0 ? (
-                <p className={`text-center py-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                  {lang === 'th' ? 'ยังไม่มีข้อมูลเวลาที่บันทึก' : 'No saved time data yet'}
-                </p>
-              ) : (
-                Object.entries(timeSubmissions || {}).map(([userName, userData]) => {
+              {(() => {
+                // Filter timeSubmissions for current poll only
+                const filteredTimeSubmissions = currentTimePollId 
+                  ? Object.fromEntries(
+                      Object.entries(timeSubmissions || {}).filter(([userName, userData]) => {
+                        return userData && (userData.pollId === currentTimePollId || 
+                               (userData.selectedDate && timePolls[currentTimePollId] && 
+                                userData.selectedDate === timePolls[currentTimePollId].targetDate));
+                      })
+                    )
+                  : (timeSubmissions || {});
+                
+                return Object.keys(filteredTimeSubmissions).length === 0 ? (
+                  <p className={`text-center py-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    {lang === 'th' ? 'ยังไม่มีข้อมูลเวลาที่บันทึก' : 'No saved time data yet'}
+                  </p>
+                ) : (
+                  Object.entries(filteredTimeSubmissions).map(([userName, userData]) => {
                   const timeAvailability = userData.timeAvailability || {};
                   
                   return (
@@ -2451,12 +2463,25 @@ const THEAvailabilityVote = () => {
                       </div>
                     </div>
                   );
-                })
-              )}
+                  })
+                );
+              })()}
             </div>
             
             {/* View Results Button */}
-            {Object.keys(timeSubmissions).length > 0 && (
+            {(() => {
+              const filteredTimeSubmissions = currentTimePollId 
+                ? Object.fromEntries(
+                    Object.entries(timeSubmissions || {}).filter(([userName, userData]) => {
+                      return userData && (userData.pollId === currentTimePollId || 
+                             (userData.selectedDate && timePolls[currentTimePollId] && 
+                              userData.selectedDate === timePolls[currentTimePollId].targetDate));
+                    })
+                  )
+                : (timeSubmissions || {});
+              
+              return Object.keys(filteredTimeSubmissions).length > 0;
+            })() && (
               <div className="flex justify-center mt-6">
                 <button
                   onClick={() => {
