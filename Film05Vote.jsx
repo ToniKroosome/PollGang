@@ -478,15 +478,29 @@ const THEAvailabilityVote = () => {
           // Load time poll from URL if poll ID is provided
           if (pollIdFromUrl) {
             setCurrentTimePollId(pollIdFromUrl);
-            // Try to load time poll data
-            const timePollData = localStorage.getItem(pollIdFromUrl);
-            if (timePollData) {
-              try {
-                const timePoll = JSON.parse(timePollData);
-                setSelectedTimeDate(new Date(timePoll.targetDate));
-              } catch (error) {
-                console.error('Error loading time poll from URL:', error);
+            // Try to load time poll data from multiple sources
+            let timePoll = null;
+            
+            // First try from timePolls state
+            if (timePolls[pollIdFromUrl]) {
+              timePoll = timePolls[pollIdFromUrl];
+            }
+            // Then try localStorage
+            else {
+              const timePollData = localStorage.getItem(pollIdFromUrl);
+              if (timePollData) {
+                try {
+                  timePoll = JSON.parse(timePollData);
+                } catch (error) {
+                  console.error('Error parsing time poll from localStorage:', error);
+                }
               }
+            }
+            
+            // Sync the target date if we found the poll
+            if (timePoll && timePoll.targetDate) {
+              setSelectedTimeDate(new Date(timePoll.targetDate));
+              console.log('🔄 Synced time poll date for voting:', timePoll.targetDate);
             }
           }
           break;
@@ -496,15 +510,29 @@ const THEAvailabilityVote = () => {
           // Load time poll from URL if poll ID is provided
           if (pollIdFromUrl) {
             setCurrentTimePollId(pollIdFromUrl);
-            // Try to load time poll data
-            const timePollData = localStorage.getItem(pollIdFromUrl);
-            if (timePollData) {
-              try {
-                const timePoll = JSON.parse(timePollData);
-                setSelectedTimeDate(new Date(timePoll.targetDate));
-              } catch (error) {
-                console.error('Error loading time poll from URL:', error);
+            // Try to load time poll data from multiple sources
+            let timePoll = null;
+            
+            // First try from timePolls state
+            if (timePolls[pollIdFromUrl]) {
+              timePoll = timePolls[pollIdFromUrl];
+            }
+            // Then try localStorage
+            else {
+              const timePollData = localStorage.getItem(pollIdFromUrl);
+              if (timePollData) {
+                try {
+                  timePoll = JSON.parse(timePollData);
+                } catch (error) {
+                  console.error('Error parsing time poll from localStorage:', error);
+                }
               }
+            }
+            
+            // Sync the target date if we found the poll
+            if (timePoll && timePoll.targetDate) {
+              setSelectedTimeDate(new Date(timePoll.targetDate));
+              console.log('🔄 Synced time poll date for results:', timePoll.targetDate);
             }
           }
           break;
@@ -598,6 +626,18 @@ const THEAvailabilityVote = () => {
       unsubscribeTimeAvailability();
     };
   }, []);
+
+  // Sync selectedTimeDate when timePolls or currentTimePollId changes
+  useEffect(() => {
+    if (currentTimePollId && timePolls[currentTimePollId]) {
+      const timePoll = timePolls[currentTimePollId];
+      if (timePoll.targetDate) {
+        const targetDate = new Date(timePoll.targetDate);
+        setSelectedTimeDate(targetDate);
+        console.log('🔄 Auto-synced time poll date from state:', timePoll.targetDate);
+      }
+    }
+  }, [currentTimePollId, timePolls]);
 
   // Admin login function
   const handleAdminLogin = async () => {
@@ -2072,10 +2112,17 @@ const THEAvailabilityVote = () => {
         
         <div className="flex flex-col items-center justify-center min-h-screen">
           <div className={`rounded-xl shadow-lg p-8 max-w-md w-full ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white'}`}>
-            <div className="flex justify-between items-center mb-8">
-              <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                {lang === 'th' ? 'เลือกเวลาว่าง' : 'Time Availability'}
-              </h1>
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                  {lang === 'th' ? 'เลือกเวลาว่าง' : 'Time Availability'}
+                </h1>
+                {currentTimePollId && timePolls[currentTimePollId] && (
+                  <p className={`text-sm mt-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                    📅 {lang === 'th' ? 'วันที่โหวต:' : 'Target Date:'} {new Date(timePolls[currentTimePollId].targetDate).toLocaleDateString(lang === 'th' ? 'th-TH' : 'en-US')}
+                  </p>
+                )}
+              </div>
               <button
                 onClick={() => setIsDarkMode(!isDarkMode)}
                 className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-yellow-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'}`}
@@ -2084,7 +2131,7 @@ const THEAvailabilityVote = () => {
               </button>
             </div>
             
-            <div className="mb-6">
+            <div className="mb-6 mt-4">
               <button
                 onClick={() => setCurrentTimePage('view')}
                 className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold"
@@ -2161,6 +2208,11 @@ const THEAvailabilityVote = () => {
                 <p className={`mt-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                   {lang === 'th' ? 'เลือกช่วงเวลาที่คุณสะดวกในแต่ละวัน' : 'Select your available hours for each day'}
                 </p>
+                {currentTimePollId && timePolls[currentTimePollId] && (
+                  <p className={`text-sm mt-2 px-3 py-2 rounded-lg ${isDarkMode ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-800'}`}>
+                    📅 {lang === 'th' ? 'วันที่โหวต:' : 'Target Date:'} {new Date(timePolls[currentTimePollId].targetDate).toLocaleDateString(lang === 'th' ? 'th-TH' : 'en-US')}
+                  </p>
+                )}
               </div>
               <button
                 onClick={navigateBack}
