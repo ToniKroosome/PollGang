@@ -957,7 +957,7 @@ const THEAvailabilityVote = () => {
                 </div>
                 <div>
                   <div className={`text-2xl font-bold ${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>
-                    {Object.values(savedData).filter(d => d.restaurant).length}
+                    {Object.values(savedData || {}).filter(d => d && d.restaurant).length}
                   </div>
                   <div className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                     {lang === 'th' ? 'แนะนำร้าน' : 'Restaurant Suggestions'}
@@ -1176,8 +1176,8 @@ const THEAvailabilityVote = () => {
     const pollsList = [];
     
     // Add created polls from pollsData
-    Object.values(pollsData).forEach(poll => {
-      const submissionsForPoll = Object.values(savedData).filter(submission => 
+    Object.values(pollsData || {}).forEach(poll => {
+      const submissionsForPoll = Object.values(savedData || {}).filter(submission => 
         submission.pollId === poll.id || 
         (submission.month === poll.month && submission.year === poll.year && !submission.pollId)
       );
@@ -1196,9 +1196,9 @@ const THEAvailabilityVote = () => {
     
     // Also check for orphaned submissions (submissions without a poll and no pollId)
     const submissionGroups = {};
-    Object.values(savedData).forEach(submission => {
+    Object.values(savedData || {}).forEach(submission => {
       const key = `${submission.month}-${submission.year}`;
-      const hasExistingPoll = Object.values(pollsData).some(poll => 
+      const hasExistingPoll = Object.values(pollsData || {}).some(poll => 
         poll.month === submission.month && poll.year === submission.year
       );
       
@@ -1455,10 +1455,10 @@ const THEAvailabilityVote = () => {
   if (currentRoute === 'time-poll-list') {
 
     // Convert timePolls object to array and sort by date
-    const timePollsList = Object.values(timePolls).map(poll => {
+    const timePollsList = Object.values(timePolls || {}).map(poll => {
       // Count responses for this poll
-      const responses = Object.entries(timeSubmissions).filter(([userName, userData]) => {
-        if (userData.selectedDate === poll.targetDate || userData.pollId === poll.id) {
+      const responses = Object.entries(timeSubmissions || {}).filter(([userName, userData]) => {
+        if (userData && (userData.selectedDate === poll.targetDate || userData.pollId === poll.id)) {
           return true;
         }
         return false;
@@ -2628,7 +2628,7 @@ const THEAvailabilityVote = () => {
                   </div>
                   <div className="text-center">
                     <div className={`text-2xl font-bold ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>
-                      {new Set(Object.values(savedData).map(d => `${d.month}-${d.year}`)).size}
+                      {new Set(Object.values(savedData || {}).filter(d => d).map(d => `${d.month}-${d.year}`)).size}
                     </div>
                     <div className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                       Active Months
@@ -2636,7 +2636,7 @@ const THEAvailabilityVote = () => {
                   </div>
                   <div className="text-center">
                     <div className={`text-2xl font-bold ${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>
-                      {Object.values(savedData).filter(d => d.restaurant).length}
+                      {Object.values(savedData || {}).filter(d => d && d.restaurant).length}
                     </div>
                     <div className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                       Restaurant Prefs
@@ -2644,7 +2644,7 @@ const THEAvailabilityVote = () => {
                   </div>
                   <div className="text-center">
                     <div className={`text-2xl font-bold ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`}>
-                      {Math.round(Object.values(savedData).reduce((sum, d) => sum + Object.keys(d.availability || {}).length, 0) / Math.max(Object.keys(savedData).length, 1))}
+                      {Math.round(Object.values(savedData || {}).filter(d => d).reduce((sum, d) => sum + Object.keys(d.availability || {}).length, 0) / Math.max(Object.keys(savedData || {}).length, 1))}
                     </div>
                     <div className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                       Avg Days/Person
