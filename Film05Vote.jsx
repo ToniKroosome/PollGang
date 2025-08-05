@@ -1438,19 +1438,20 @@ const THEAvailabilityVote = () => {
     );
   }
 
+  // Load time polls from localStorage on mount
+  useEffect(() => {
+    const storedTimePolls = localStorage.getItem('film05_time_polls');
+    if (storedTimePolls) {
+      try {
+        setTimePolls(JSON.parse(storedTimePolls));
+      } catch (error) {
+        console.error('Error loading time polls:', error);
+      }
+    }
+  }, []);
+
   // Time Poll List Page
   if (currentRoute === 'time-poll-list') {
-    // Load time polls from localStorage if not already loaded
-    useEffect(() => {
-      const storedTimePolls = localStorage.getItem('film05_time_polls');
-      if (storedTimePolls) {
-        try {
-          setTimePolls(JSON.parse(storedTimePolls));
-        } catch (error) {
-          console.error('Error loading time polls:', error);
-        }
-      }
-    }, []);
 
     // Convert timePolls object to array and sort by date
     const timePollsList = Object.values(timePolls).map(poll => {
