@@ -326,6 +326,7 @@ const THEAvailabilityVote = () => {
   const [timeSubmissions, setTimeSubmissions] = useState({});
   const [timeUserName, setTimeUserName] = useState('');
   const [currentTimePage, setCurrentTimePage] = useState('main');
+  const [firstClickMode, setFirstClickMode] = useState('available'); // 'available' or 'not-available'
 
   useEffect(() => {
     if (THEName && savedData[THEName]) {
@@ -2261,8 +2262,14 @@ const THEAvailabilityVote = () => {
             {/* Time grid */}
             <div className="mb-6">
               <h3 className={`text-lg font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-                {lang === 'th' ? 'เลือกเวลาที่สะดวก (คลิกเพื่อสลับ: เปล่า → ว่าง → อาจได้ → ไม่ว่าง)' : 'Select Available Hours (click to cycle: None → Available → Maybe → Not Available)'}
+                {lang === 'th' ? 'เลือกเวลาที่สะดวก (คลิกเพื่อสลับสถานะ)' : 'Select Available Hours (click to cycle status)'}
               </h3>
+              <p className={`text-sm mb-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                {firstClickMode === 'available' 
+                  ? (lang === 'th' ? 'ลำดับ: เปล่า → ว่าง → อาจได้ → ไม่ว่าง → เปล่า' : 'Order: None → Available → Maybe → Not Available → None')
+                  : (lang === 'th' ? 'ลำดับ: เปล่า → ไม่ว่าง → ว่าง → อาจได้ → เปล่า' : 'Order: None → Not Available → Available → Maybe → None')
+                }
+              </p>
               
               {/* Color Legend */}
               <div className="mb-4 flex flex-wrap gap-4 text-xs">
@@ -2292,6 +2299,30 @@ const THEAvailabilityVote = () => {
                 </div>
               </div>
               
+              {/* First Click Mode Toggle */}
+              <div className="mb-4 flex items-center justify-between">
+                <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  {lang === 'th' ? 'โหมดคลิกครั้งแรก:' : 'First Click Mode:'}
+                </span>
+                <button
+                  onClick={() => setFirstClickMode(prev => prev === 'available' ? 'not-available' : 'available')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    firstClickMode === 'available' 
+                      ? isDarkMode 
+                        ? 'bg-green-600 text-white' 
+                        : 'bg-green-500 text-white'
+                      : isDarkMode 
+                        ? 'bg-red-600 text-white' 
+                        : 'bg-red-500 text-white'
+                  }`}
+                >
+                  {firstClickMode === 'available' 
+                    ? (lang === 'th' ? '✅ ว่าง (1 คลิก)' : '✅ Available (1 click)')
+                    : (lang === 'th' ? '❌ ไม่ว่าง (1 คลิก)' : '❌ Not Available (1 click)')
+                  }
+                </button>
+              </div>
+              
               <div className="grid grid-cols-6 md:grid-cols-8 gap-2">
                 {hours.map(hour => {
                   const hourStatus = currentDateAvailability[hour] || 0; // 0=none, 1=available, 2=maybe, 3=not available
@@ -2301,8 +2332,23 @@ const THEAvailabilityVote = () => {
                     <button
                       key={hour}
                       onClick={() => {
-                        // Cycle through states: 0 -> 1 -> 2 -> 3 -> 0
-                        const nextStatus = (hourStatus + 1) % 4;
+                        let nextStatus;
+                        if (firstClickMode === 'available') {
+                          // Default mode: 0 -> 1 -> 2 -> 3 -> 0 (None -> Green -> Yellow -> Red -> None)
+                          nextStatus = (hourStatus + 1) % 4;
+                        } else {
+                          // Not-available first mode: 0 -> 3 -> 1 -> 2 -> 0 (None -> Red -> Green -> Yellow -> None)
+                          if (hourStatus === 0) {
+                            nextStatus = 3; // None -> Red
+                          } else if (hourStatus === 3) {
+                            nextStatus = 1; // Red -> Green
+                          } else if (hourStatus === 1) {
+                            nextStatus = 2; // Green -> Yellow
+                          } else if (hourStatus === 2) {
+                            nextStatus = 0; // Yellow -> None
+                          }
+                        }
+                        
                         setTimeAvailability(prev => ({
                           ...prev,
                           [dateKey]: {
