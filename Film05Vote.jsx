@@ -2571,9 +2571,7 @@ const THEAvailabilityVote = () => {
                 const filteredTimeSubmissions = currentTimePollId 
                   ? Object.fromEntries(
                       Object.entries(timeSubmissions || {}).filter(([userName, userData]) => {
-                        return userData && (userData.pollId === currentTimePollId || 
-                               (userData.selectedDate && timePolls[currentTimePollId] && 
-                                userData.selectedDate === timePolls[currentTimePollId].targetDate));
+                        return userData && userData.pollId === currentTimePollId;
                       })
                     )
                   : (timeSubmissions || {});
