@@ -1653,10 +1653,10 @@ const THEAvailabilityVote = () => {
                         {lang === 'th' ? 'การตอบกลับล่าสุด:' : 'Recent Responses:'}
                       </h4>
                       <div className="space-y-1">
-                        {timePoll.responses.slice(0, 3).map((response, index) => (
+                        {timePoll.responses.slice(0, 3).map(([userName, userData], index) => (
                           <div key={index} className={`text-xs flex justify-between ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                            <span>{response.userName}</span>
-                            <span>{Object.values(response.data || {}).filter(status => status > 0).length} slots</span>
+                            <span>{userName}</span>
+                            <span>{Object.values(userData.timeAvailability || {}).filter(status => status > 0).length} slots</span>
                           </div>
                         ))}
                         {timePoll.responses.length > 3 && (
@@ -2565,14 +2565,24 @@ const THEAvailabilityVote = () => {
             
             <div className="space-y-4">
               {(() => {
+                // Debug: Log filtering information
+                console.log('🔍 All Saved Time Slots Debug:');
+                console.log('  currentTimePollId:', currentTimePollId);
+                console.log('  timeSubmissions keys:', Object.keys(timeSubmissions || {}));
+                console.log('  timeSubmissions data:', timeSubmissions);
+                
                 // Filter timeSubmissions for current poll only
                 const filteredTimeSubmissions = currentTimePollId 
                   ? Object.fromEntries(
                       Object.entries(timeSubmissions || {}).filter(([userName, userData]) => {
-                        return userData && userData.pollId === currentTimePollId;
+                        const shouldInclude = userData && userData.pollId === currentTimePollId;
+                        console.log(`  ${userName}: pollId=${userData?.pollId}, shouldInclude=${shouldInclude}`);
+                        return shouldInclude;
                       })
                     )
                   : (timeSubmissions || {});
+                
+                console.log('  filteredTimeSubmissions keys:', Object.keys(filteredTimeSubmissions));
                 
                 return Object.keys(filteredTimeSubmissions).length === 0 ? (
                   <p className={`text-center py-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
