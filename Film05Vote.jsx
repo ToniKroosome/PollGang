@@ -1505,7 +1505,7 @@ const THEAvailabilityVote = () => {
     const timePollsList = Object.values(timePolls || {}).map(poll => {
       // Count responses for this poll
       const responses = Object.entries(timeSubmissions || {}).filter(([userName, userData]) => {
-        if (userData && (userData.selectedDate === poll.targetDate || userData.pollId === poll.id)) {
+        if (userData && userData.pollId === poll.id) {
           return true;
         }
         return false;
@@ -1861,9 +1861,7 @@ const THEAvailabilityVote = () => {
       ? Object.fromEntries(
           Object.entries(timeSubmissions || {}).filter(([userName, userData]) => {
             // Check if this user's data is for the current poll
-            return userData && (userData.pollId === currentTimePollId || 
-                   (userData.selectedDate && timePolls[currentTimePollId] && 
-                    userData.selectedDate === timePolls[currentTimePollId].targetDate));
+            return userData && userData.pollId === currentTimePollId;
           })
         )
       : (timeSubmissions || {});
@@ -2658,9 +2656,7 @@ const THEAvailabilityVote = () => {
               const filteredTimeSubmissions = currentTimePollId 
                 ? Object.fromEntries(
                     Object.entries(timeSubmissions || {}).filter(([userName, userData]) => {
-                      return userData && (userData.pollId === currentTimePollId || 
-                             (userData.selectedDate && timePolls[currentTimePollId] && 
-                              userData.selectedDate === timePolls[currentTimePollId].targetDate));
+                      return userData && userData.pollId === currentTimePollId;
                     })
                   )
                 : (timeSubmissions || {});
