@@ -474,6 +474,12 @@ const THEAvailabilityVote = () => {
           setCurrentRoute('create-time-poll');
           break;
         case 'time-availability':
+          // If no poll ID is provided, redirect to time poll creation
+          if (!pollIdFromUrl) {
+            setCurrentRoute('create-time-poll');
+            updateURL('create-time-poll');
+            break;
+          }
           setCurrentRoute('time-availability');
           setCurrentTimePage('main');
           // Load time poll from URL if poll ID is provided
